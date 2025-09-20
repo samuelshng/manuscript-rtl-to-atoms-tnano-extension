@@ -339,10 +339,10 @@ To move beyond approximations and toward practical implementation, an earlier co
 Before mature \gls{sidb} \gls{eda} tooling was available, studies of \gls{sidb} applications were limited and largely depended on manual \gls{cad} prototyping with extrapolated area and latency estimates. One such example was an \gls{sidb} \gls{mxu}~\cite{ng2023blueprint} for \gls{ml} acceleration, which mirrored design choices from Google's \gls{tpu}v1~\cite{jouppi2017indatacenter}: floating-point operations common in \gls{ml} workloads were quantized to 8-bit integer arithmetic to reduce computational cost, and both employed a systolic-array architecture relying on regular arrangements of \glspl{pe}---homogeneous logic modules that operate on their inputs and pass results to adjacent \glspl{pe}---to perform computation (\fref{sfig:schem_mxu_flow_sa}). In that work, each \gls{pe} performed the \gls{mac} operation~\cite{ng2023blueprint}:
 %
 \begin{equation}
-    s_{\text{out}} = s_{\text{in}} + (a \times w),
+    s_{\text{out}} = s_{\text{in}} + (w \cdot a),
 \end{equation}
 %
-with $s_\text{in}$ the input partial sum computed by the preceding \gls{pe}, $a$ the activation, $w$ the weight, and $s_\text{out}$ the output partial sum.
+with $s_\text{in}$ the input partial sum computed by the preceding \gls{pe}, $w$ the weight, $a$ the activation, and $s_\text{out}$ the output partial sum.
 
 Each matrix-multiplication job involves two primary phases:
 %
@@ -368,7 +368,7 @@ That work reported up to $10\times$ reduction in area cost and up to $10^8\times
 
 \begin{algorithm}[tbp]
 \footnotesize
-\caption{Processing Element's Forward Pass Logic}\label{alg:pe-forward}
+\caption{\OLD{Processing Element's Forward Pass Logic}}\label{alg:pe-forward}
 
 \renewcommand{\algorithmicrequire}{\textbf{Inputs:}}
 \renewcommand{\algorithmicensure}{\textbf{Outputs:}}
@@ -400,21 +400,21 @@ That work reported up to $10\times$ reduction in area cost and up to $10^8\times
 \end{algorithmic}
 \end{algorithm}
 
-\OLD{We approach the Verilog implementation of the \gls{mxu} with the following requirements in mind:
+To achieve this work's objectives, the \gls{rtl} implementation must satisfy the following requirements:
 %
-\begin{enumerate}
-    \item The Verilog implementation must obey the constraints of \emph{fiction}, which expects combinational gate-level netlists as inputs, with no feedback loops or registers. Signal flow in the placed and routed \gls{sidb} layouts would also be unidirectional.
-    \item Operation of the pipelined processing element must be verifiable---whereas prior work on the \gls{sidb} \gls{mxu}~\cite{ng2023blueprint} did not include formal verifications of the \gls{mxu}'s operation, this work has the opportunity to verify our Verilog implementation with test bench coverage.
-\end{enumerate}
+\begin{enumerate*}
+  \item the \gls{rtl} implementation must obey \emph{fiction}'s requirement for gate-level netlists to be purely combinational; and
+  \item operation of the pipelined \gls{pe} must be verifiable---whereas prior work \cite{ng2023blueprint} omitted formal verification, this work has the opportunity to verify operational correctness with test bench coverage.
+\end{enumerate*}
 %
-As described in \secref{sec:related-work}, each \gls{pe} in the \gls{sidb} \gls{mxu} includes a forward pass where most of the core logic takes place, and a return pass which is required for signal synchronization and the operation of the delay-line memory. However, this creates a feedback loop which violates \emph{fiction}'s input expectations. To work around this, our \gls{rtl} Verilog implementation is split hierarchically. The core logic in the forward pass is implemented as a combinational Verilog description and shown in Alg.~\ref{alg:pe-forward}. Operation of the full \gls{pe} is then captured by a higher level \gls{rtl} Verilog description that defines the component's input and output signals, pipelined internal signal steering, and synchronized signal timing for the return pass.}
+Recall from \secref{sec:related-work} that each \gls{pe} consists of a forward and return pass, forming an internal feedback loop at the \gls{pe} level, violating \emph{fiction}'s input requirements.
+As a workaround, this work proposes a hierarchical \gls{rtl} implementation: the \gls{pe}'s core logic in the forward pass is implemented in strictly combinational \gls{rtl} as shown in Alg.~\ref{alg:pe-forward} to ensure compatibility with subsequent synthesis steps; clocked operation of the full \gls{pe} is captured in a higher level \gls{rtl} defining the component's input and output signals, pipelined internal signal steering, and synchronized signal timing for the return pass.
 
-\TODO{Describe shortcomings that we've identified in the conference paper, briefly explain architecturally (e.g., cost of crossings) why alternatives are better, and then clearly state our contributions (explicitly defined N-bit ripple-carry adder and array multiplier generators) to close the gap. See if we can generate some figures for this. Another thing is to see whether we can deduce which adder/multiplier implementation Yosys went for.}
+\todo{Current code directly swaps the \texttt{*} and \texttt{+} operations with the custom Verilog \glspl{alu}, but in principle it is also possible to specify them in the Yosys step. If we end up going down that route then it would make sense to move this paragraph to \secref{sec:methodology-eda}.}
+When defining arithmetic operations in \gls{rtl} Verilog such as \texttt{product = w * a} or \texttt{product + partial\_sum\_in}, the exact choice of \glspl{alu} is left to subsequent synthesis steps to determine (further discussed in \secref{sec:methodology-eda}). In the absence of exact \gls{alu} specification, the default choices made by synthesis tools would typically opt for \gls{cmos}-optimized implementations, which can underperform in \gls{fcn} logic \cite{kim2010multipliers} due to different area and latency scaling that comes with the strictly planar technology where gates and wires must share the same plane.
+To ensure the most optimal \glspl{alu} are chosen, this work explicitly defines the gate-level Verilog for a ripple-carry adder and an array multiplier---both previously found to be ideal for \gls{fcn} thanks to their relative simplicity which reduces wiring congestion and the need for crossovers\cite{kim2010multipliers}\todo{Awkward sentence, simplify}---and employ them in the \gls{pe}.
 
-\OLD{Test benches can thus be written for both levels of Verilog descriptions. At the lower level, test benches have been implemented to verify correct \gls{mac} operation with signed numbers, including edge cases like inputting large signed integers that verify proper operation at the limit of the 8-bit quantized implementation. At the full \gls{pe} level, test benches have been written to verify operation in preloading and compute modes. Since it is expected that the final \gls{sidb} implementation would be deeply pipelined, the test benches also verify pipelined operation by presenting interleaved inputs across multiple clock cycles to verify the \gls{pe}'s ability to handle multiple sets of weights and activations simultaneously going through different pipeline stages.
-Simulations are performed using Icarus Verilog~\cite{icarusverilog}. These test benches ensure that the PE design is logically correct before proceeding to synthesis and physical mapping.
-You can find the full open-source Verilog implementation on GitHub~\cite{githubsupplementary}.}
-
+Correctness was validated with test benches for the \glspl{alu}, the combinational \gls{pe} core, and the clocked \gls{pe}. In preload mode, weights were stored correctly; in compute mode, the \gls{mac} produced correct results for the input activations, stored weights, and incoming partial sums. Concurrent \gls{mac} operation was sustained by interleaving inputs to fully utilize all pipeline stages. All simulations were performed using Icarus Verilog~\cite{icarusverilog}. The logical correctness of the \gls{pe} was thus established prior to synthesis and physical mapping. The full open-source Verilog implementation is available on GitHub~\cite{githubsupplementary}.
 
 \subsection{Design Automation Workflow}\label{sec:methodology-eda}
 
