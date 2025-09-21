@@ -198,7 +198,7 @@
 
 \begin{document}
 
-\title{RTL-to-Atoms Synthesis of an Atomic-Scale Machine Learning Accelerator with Technology-Specific Optimizations}
+\title{RTL-to-Atoms Synthesis of a Machine Learning Accelerator on Atomic-Scale Computers}
 
 \author{Anonymous author(s)}
 
@@ -232,6 +232,8 @@ Objectives that, together, satisfy \SI{50}{\percent} new contents rule:
     \item[\done] Testbench the above for verification
     \item[\done] In the Processing Element, replace multiplication and accumulation operations with the optimized \glspl{alu}
     \item[\done] Synthesize and report changes
+    \item Post-Yosys equivalence check (use PE-forward test bench)
+    \item Extend Verilogs to accept arbitrary width and activation bit-width settings
     \item New table similar to DATE's table: report multiple algorithm combinations (e.g., ortho with and without PLO, FoM vs. uniform gates), also report FoM-informed results similarly
     \item Create multi-attempt averaged score benchmark set:
     \begin{itemize}
@@ -422,13 +424,14 @@ After verifying the Verilog description, the \gls{rtl} design must be synthesize
 \end{enumerate}
 }
 
+\TODO{If we incorporate post-Yosys test bench (to ensure PE-forward functionality is maintained) then mention it too.}
+
 \OLD{As part of this investigation, we have also contributed various improvements to \emph{fiction} to further optimize the \gls{eda} tools for \gls{sidb} workflows.
 Recent works on \gls{sidb} logic robustness have culminated into the proposal of unified \glspl{fom} for \gls{sidb} gates~\cite{drewniok2024unifying}, which comprehensively capture currently known cost functions that can impact the robustness of \gls{sidb} gates: operational domain size~\cite{ng2020siqad, walter2023reducing}, thermal resilience~\cite{drewniok2023temperature}, band bending~\cite{pitters2011charge}, defect~\cite{ng2024simulating, huff2019electrostatic, croshaw2020atomic}, and more. The scores achieved by each metric are weighted and averaged to obtain $\chi$, a \gls{fom} assigned to the gate. Our gate library uses $\chi$ as the cost function for the technology mapper that will thus favor the most stable gates even if a certain logic could have been implemented with fewer, albeit less stable, selection of gates.
 The impact of this in the final layout will be compared in \secref{sec:results-and-discussion}.}
 
 \OLD{We have also improved the hexagonalization step to better align with \gls{sidb} layout expectations. The Cartesian layout prior to hexagonalization employs the 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional} where all input pins are placed along the top and left borders, and signals subsequently flow diagonally from top-left to bottom-right. In prior implementations of hexagonalization, the Cartesian layout is then rotated by $45^\circ$ and projected onto a hexagon grid~\cite{hofmann2023scalable} such that signals flow top-down. As a result, input pins on the hexagonal layout tend to have a $y$ offset from the top. This can negatively impact the theoretical throughput of the layout as some input pins might have to be held at the same value over multiple clock cycles in order to synchronize with other inputs.
 These constraints can be alleviated by extending all input pins to the top edge of the layout; we have thus updated the hexagonalization algorithm to perform this extra step which yields fully synchronized circuit layouts.}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Results and Discussion
