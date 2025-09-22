@@ -274,7 +274,7 @@ To move beyond approximations and toward practical implementation, an earlier co
 
 \TODO{Start the paragraph with a transition by briefly identify shortcomings of the conference paper.} This work provides a substantially extended treatment to the preceding conference paper \cite{ng2025building} by \TODO{new idea, new analysis, new results}. The remainder of the manuscript is structured as follows: \TODO{Section outline.}
 
-% The rest of the manuscript is structured as follows: \secref{sec:background} covers background information on \gls{sidb} logic operation and design automation frameworks; \secref{sec:related-work} presents prior work on the \gls{sidb} \gls{mxu}; \secref{sec:methodology} describes our proposed methodology for designing the \gls{rtl} Verilog, test bench coverage for operational validation, and workflow for mapping the Verilog description down to dot-accurate layouts; \secref{sec:results-and-discussion} presents the synthesis results, comparisons between different settings and against past work, and discussions about their significance; \secref{sec:conclusion-future-work} concludes the manuscript and discusses potential future work.
+% The rest of the manuscript is structured as follows: \secref{sec:background} covers background information on \gls{sidb} logic operation and design automation frameworks; \secref{sec:related-work} presents prior work on the \gls{sidb} \gls{mxu}; \secref{sec:methodology} describes our proposed methodology for designing the \gls{rtl} Verilog, test bench coverage for operational validation, and workflow for mapping the Verilog description down to dot-accurate layouts; \secref{sec:results} presents the synthesis results, comparisons between different settings and against past work, and discussions about their significance; \secref{sec:conclusion-future-work} concludes the manuscript and discusses potential future work.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -400,7 +400,7 @@ To achieve this work's objectives, the \gls{rtl} implementation must satisfy the
 %
 Recall from \secref{sec:related-work} that each \gls{pe} consists of a forward and return pass, forming an internal feedback loop at the \gls{pe} level, violating \emph{fiction}'s input requirements.
 As a workaround, this work proposes a hierarchical \gls{rtl} implementation: the \gls{pe}'s core logic in the forward pass is implemented in strictly combinational \gls{rtl} as shown in Alg.~\ref{alg:pe-forward} to ensure compatibility with subsequent synthesis steps; clocked operation of the full \gls{pe} is captured in a higher level \gls{rtl} defining the component's input and output signals, pipelined internal signal steering, and synchronized signal timing for the return pass.
-Both the combinational \gls{pe} core and the clocked shell are parameterized by the bit widths of weights and activations, enabling exploration of multiple configurations in \secref{sec:results-and-discussion}.
+Both the combinational \gls{pe} core and the clocked shell are parameterized by the bit widths of weights and activations, enabling exploration of multiple configurations in \secref{sec:results}.
 
 Correctness was validated with test benches for the combinational \gls{pe} core and the clocked \gls{pe}. In preload mode, weights were stored correctly; in compute mode, the \gls{mac} produced correct results for the input activations, stored weights, and incoming partial sums. Concurrent \gls{mac} operation was sustained by interleaving inputs to fully utilize all pipeline stages. All simulations were performed using Icarus Verilog~\cite{icarusverilog}. The logical correctness of the \gls{pe} was thus established prior to synthesis and physical mapping. The full open-source Verilog implementation is available on GitHub~\cite{githubsupplementary}.
 
@@ -413,7 +413,7 @@ Absent explicit directives, \emph{Yosys} selects \gls{cmos}-optimized \gls{alu} 
 The mapped netlist is then rewritten as an \gls{aig} with \emph{Yosys} and optimized with ABC's \textit{\&deepsyn}~\cite{brayton2010abc} strategy to reduce the network's node count.
 Finally, the resulting gate-level netlist is validated against the \gls{pe}-core test benches to confirm functional correctness.
 
-The verified gate-level netlist is subsequently forwarded to \emph{fiction}~\cite{walter2019fiction}, whose \gls{fcn}-aware toolchain synthesizes it into an \gls{sidb} layout following the methodology in \cite{walter2022hexagons}:
+The verified gate-level netlist is subsequently forwarded to \emph{fiction}~\cite{walter2019fiction}, whose \gls{fcn}-aware toolchain synthesizes it into an \gls{sidb} layout following the synthesis flow in \cite{walter2022hexagons}:
 %
 \begin{enumerate}
   \item Technology mapping maps the \gls{aig} onto the \emph{Bestagon} gate library~\cite{walter2022hexagons}, exploiting the library's richer primitives to shrink the logic compared with an AND/INV-only basis.
@@ -424,31 +424,37 @@ The verified gate-level netlist is subsequently forwarded to \emph{fiction}~\cit
   \item The \emph{Bestagon} library~\cite{walter2022hexagons} is applied to the hexagonalized layout, yielding a dot-accurate \gls{sidb} implementation of the design.
 \end{enumerate}
 
-In parallel, we augmented \emph{fiction} itself to better target \gls{sidb} design. Recent robustness studies propose a unified cost function for \glspl{fom} for \gls{sidb} gates~\cite{drewniok2024unifying} that fold in the dominant cost drivers---operational domain size~\cite{ng2020siqad, walter2023reducing}, thermal stability~\cite{drewniok2023temperature}, band-bending effects~\cite{pitters2011charge}, defect sensitivity~\cite{ng2024simulating, huff2019electrostatic, croshaw2020atomic}, and related factors---into a single score $\chi$. This work adopts $\chi$ as the objective for the technology mapper so that the flow prefers gates with higher predicted robustness, even when a less stable configuration might use fewer devices. The resulting trade-offs are examined in \secref{sec:results-and-discussion}.
+In parallel, we augmented \emph{fiction} itself to better target \gls{sidb} design. Recent robustness studies propose a unified cost function for \glspl{fom} for \gls{sidb} gates~\cite{drewniok2024unifying} that fold in the dominant cost drivers---operational domain size~\cite{ng2020siqad, walter2023reducing}, thermal stability~\cite{drewniok2023temperature}, band-bending effects~\cite{pitters2011charge}, defect sensitivity~\cite{ng2024simulating, huff2019electrostatic, croshaw2020atomic}, and related factors---into a single score $\chi$. This work adopts $\chi$ as the objective for the technology mapper so that the flow prefers gates with higher predicted robustness, even when a less stable configuration might use fewer devices. The resulting trade-offs are examined in \secref{sec:results}.
 
 The hexagonalization algorithm was also revised in this work to align the generated layouts with \gls{sidb} clocking expectations. The Cartesian layout prior to hexagonalization follows the 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional}, placing primary inputs along the north and west borders and letting data advance diagonally. Earlier hexagonalization routines~\cite{hofmann2023scalable} rotated this grid by $45^\circ$ and projected it onto the hex lattice, which left many inputs recessed from the top edge. Those offsets lower the attainable throughput because some signals must be held across multiple cycles to rejoin the global timing. The updated flow stretches every input and output channel to the top and bottom boundaries after projection, producing layouts whose ports are time-aligned as they enter and exit the hexagonal fabric.
 
 \TODO{If we're able to incorporate half-adder support in fiction and validate in gold, mention that here.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Results and Discussion
+% Experimental Results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Results and Discussion}\label{sec:results-and-discussion}
+\section{Experimental Results}\label{sec:results}
 
 \TODO{Section intro.}
 
 \subsection{Experimental Protocol}
 
-\TODO{Describe our updated experiment protocol:}
-%
-\begin{enumerate}
-  \item Multi-run synthesis to gather mean statistics for probabilistic synthesis steps: number of attempts, random-seed handling, stopping criteria
-  \begin{itemize}
-    \item I think it also stands to reason that if a designer finds the post-optimization output to be bigger than the original input, then a human designer would discard those bigger outputs, therefore the reporting should also discard them too. But we can report on the discard rate.
-  \end{itemize}
-  \item Variables that we test (FoM vs.~no FoM, ABC's c2rs vs.~deepsyn, any fiction algs that have available configs or are probabilistic)
-  \item Reporting conventions: best, mean$\pm$std, \SI{95}{\percent} CI, success rate of probabilistic steps finding solutions (e.g., \emph{gold}), success rate of equivalence checks
-\end{enumerate}
+This comparative study aims to showcase the scaling behavior of various bit-width configurations for activations and weights, as well as the synthesis outcome under different technology mapper configurations and placement-and-routing algorithms.
+Multiple bit-width configurations of the combinational \gls{pe}-core (\secref{sec:methodology-verilog}) are synthesized, including 2-bit, 4-bit, and 8-bit weights and activations, which are subsequently termed W2A2, W4A4, and W8A8, respectively. These selections correspond to widely studied quantized regimes for CNNs and Transformers where the dominant operations reduce to matrix multiplications that map directly onto an \gls{mxu} \cite{esser2020learnedstepsizequantization, banner2019post, jouppi2017indatacenter}.
+
+\TODO{Variables that we test (FoM vs.~no FoM, ABC's c2rs vs.~deepsyn (optional), specify configurations for any fiction algs that have available configs or are probabilistic)}
+
+% Original plan when we were going to do multi-run averages, but now I don't think we have to do that.
+% \TODO{Describe our updated experiment protocol:}
+% %
+% \begin{enumerate}
+%   \item Multi-run synthesis to gather mean statistics for probabilistic synthesis steps: number of attempts, random-seed handling, stopping criteria
+%   \begin{itemize}
+%     \item I think it also stands to reason that if a designer finds the post-optimization output to be bigger than the original input, then a human designer would discard those bigger outputs, therefore the reporting should also discard them too. But we can report on the discard rate.
+%   \end{itemize}
+%   \item Variables that we test (FoM vs.~no FoM, ABC's c2rs vs.~deepsyn, any fiction algs that have available configs or are probabilistic)
+%   \item Reporting conventions: best, mean$\pm$std, \SI{95}{\percent} CI, success rate of probabilistic steps finding solutions (e.g., \emph{gold}), success rate of equivalence checks
+% \end{enumerate}
 
 % \begin{table*}
 %     \centering
@@ -463,6 +469,8 @@ The hexagonalization algorithm was also revised in this work to align the genera
 %     \bottomrule
 %     \end{tabular}
 % \end{table*}
+
+\subsection{Results and Discussion}
 
 \begin{table*}
   \caption{Synthesized processing element in SiDB MXU}
