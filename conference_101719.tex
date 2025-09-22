@@ -353,13 +353,13 @@ That work reported up to $10\times$ reduction in area cost and up to $10^8\times
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology} \label{sec:methodology}
 
-\OLD{In this section, we describe the full methodology at the core of this work. Starting with \secref{sec:methodology-verilog}, we discuss our hierarchical Verilog development approach which satisfies \mbox{1) the} restrictions on input netlists imposed by \gls{fcn} \gls{eda} tools and \mbox{2) our} desire to verify the operational correctness of the \gls{sidb} \gls{mxu}; then in \secref{sec:methodology-eda}, we present the workflow employed by this work to map the \gls{rtl} Verilog all the way down to synthesized quantum-dot layouts.}
+In this section, the end-to-end methodology employed by this work is outlined. In \secref{sec:methodology-verilog}, a hierarchical \gls{rtl} Verilog design of the \gls{sidb} \gls{mxu} is presented in which a strictly combinational \gls{pe} core satisfies \gls{eda} input constraints while a clocked wrapper preserves pipeline timing, permitting test-bench validation of interleaved operation. In \secref{sec:methodology-eda}, the \gls{rtl}-to-atoms flow is detailed alongside technology-specific improvements contributed by this work.
 
 \subsection{\titlecap{\glsentrylong{mxu} in Hierarchical Verilog}}\label{sec:methodology-verilog}
 
 \begin{algorithm}[tbp]
 \footnotesize
-\caption{\OLD{Processing Element's Forward Pass Logic}}\label{alg:pe-forward}
+\caption{Forward Pass Logic in Processing Element}\label{alg:pe-forward}
 
 \renewcommand{\algorithmicrequire}{\textbf{Inputs:}}
 \renewcommand{\algorithmicensure}{\textbf{Outputs:}}
@@ -400,8 +400,7 @@ To achieve this work's objectives, the \gls{rtl} implementation must satisfy the
 %
 Recall from \secref{sec:related-work} that each \gls{pe} consists of a forward and return pass, forming an internal feedback loop at the \gls{pe} level, violating \emph{fiction}'s input requirements.
 As a workaround, this work proposes a hierarchical \gls{rtl} implementation: the \gls{pe}'s core logic in the forward pass is implemented in strictly combinational \gls{rtl} as shown in Alg.~\ref{alg:pe-forward} to ensure compatibility with subsequent synthesis steps; clocked operation of the full \gls{pe} is captured in a higher level \gls{rtl} defining the component's input and output signals, pipelined internal signal steering, and synchronized signal timing for the return pass.
-
-\TODO{Mention that the bit width of weights and activations are adjustable.}
+Both the combinational \gls{pe} core and the clocked shell are parameterized by the bit widths of weights and activations, enabling exploration of multiple configurations in \secref{sec:results-and-discussion}.
 
 Correctness was validated with test benches for the combinational \gls{pe} core and the clocked \gls{pe}. In preload mode, weights were stored correctly; in compute mode, the \gls{mac} produced correct results for the input activations, stored weights, and incoming partial sums. Concurrent \gls{mac} operation was sustained by interleaving inputs to fully utilize all pipeline stages. All simulations were performed using Icarus Verilog~\cite{icarusverilog}. The logical correctness of the \gls{pe} was thus established prior to synthesis and physical mapping. The full open-source Verilog implementation is available on GitHub~\cite{githubsupplementary}.
 
@@ -409,7 +408,7 @@ Correctness was validated with test benches for the combinational \gls{pe} core 
 
 After verifying the \gls{rtl}, the combinational \gls{pe} core is ready for the \gls{rtl}-to-atoms synthesis flow. At the high level, this includes an \gls{rtl} to gate-level netlist synthesis in order to produce a \emph{fiction}-compatible netlist, which is then ingested into \emph{fiction} for a multistep synthesis workflow, ultimately yielding a dot-accurate \gls{sidb} layout.
 
-Starting with the \gls{rtl}-to-netlist stage, this work uses \emph{Yosys}~\cite{wolf2013yosys} to map arithmetic operators such as multiplication (\texttt{*}) and accumulation (\texttt{+}) into gate-level \gls{alu} structures.
+Starting with the \gls{rtl}-to-netlist stage, this work uses \emph{Yosys}~\cite{wolf2013yosys} to map arithmetic operators such as \mbox{accumulation (\texttt{+})} and \mbox{multiplication (\texttt{*})} into gate-level \gls{alu} structures.
 Absent explicit directives, \emph{Yosys} selects \gls{cmos}-optimized \gls{alu} implementations, which can underperform in \gls{fcn} because their strictly planar fabrics force gates and wires to share the same plane, altering the area and latency trade-offs \cite{kim2010multipliers}. To ensure technology-appropriate choices, this work supplies explicit gate-level descriptions of a ripple-carry adder and an array multiplier to the \emph{Yosys} technology mapper. These implementations have been shown to suit \gls{fcn} technologies thanks to their regular structure, which eases wiring congestion and limits the need for crossovers \cite{kim2010multipliers}.
 The mapped netlist is then rewritten as an \gls{aig} with \emph{Yosys} and optimized with ABC's \textit{\&deepsyn}~\cite{brayton2010abc} strategy to reduce the network's node count.
 Finally, the resulting gate-level netlist is validated against the \gls{pe}-core test benches to confirm functional correctness.
