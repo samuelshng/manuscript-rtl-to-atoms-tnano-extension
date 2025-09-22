@@ -233,13 +233,12 @@ Objectives that, together, satisfy \SI{50}{\percent} new contents rule:
     \item[\done] In the Processing Element, replace multiplication and accumulation operations with the optimized \glspl{alu}
     \item[\done] Synthesize and report changes
     \item Post-Yosys equivalence check (use PE-forward test bench)
-    \item Extend Verilogs to accept arbitrary width and activation bit-width settings
-    \item New table similar to DATE's table: report multiple algorithm combinations (e.g., ortho with and without PLO, FoM vs. uniform gates), also report FoM-informed results similarly
-    \item Create multi-attempt averaged score benchmark set:
+    \item[\done] Extend Verilogs to accept arbitrary width and activation bit-width settings
+    \item Add half-adder gate to technology mapper
     \begin{itemize}
-        \item To clarify, this is an attempt at realizing that ``scientifically rigorous'' synthesis results comparison
-        \item We can create a long-running script that makes $N$ attempts at deepsyn, TM to FoM-informed and uniform gates, $M$ attempts at \emph{gold} (if tractable). Since \emph{PLO} is deterministic we won't have to rerun that. This means $2 \cdot N \cdot M$ attempts in total. Missing anything?
+        \item Simon to look into adding HA to TM and synthesizing via \emph{gold}
     \end{itemize}
+    \item New table similar to DATE's table: report multiple algorithm combinations (e.g., ortho with and without PLO, FoM vs. uniform gates), test multiple bit-widths (W8A8, W4A4), report FoM-informed results similarly
 \end{todolist}
 
 \subsection*{Stretch goals}
@@ -247,9 +246,10 @@ Objectives that, together, satisfy \SI{50}{\percent} new contents rule:
 Only do if there's time and if it's worth it:
 %
 \begin{todolist}
-    \item Add half-adder gate to technology mapper
+    \item Create multi-attempt averaged score benchmark set:
     \begin{itemize}
-        \item IMO probably worth it but pending TUM's confirmation
+        \item To clarify, this is an attempt at realizing that ``scientifically rigorous'' synthesis results comparison
+        \item We can create a long-running script that makes $N$ attempts at deepsyn, TM to FoM-informed and uniform gates, $M$ attempts at \emph{gold} (if tractable). Since \emph{PLO} is deterministic we won't have to rerun that. This means $2 \cdot N \cdot M$ attempts in total. Missing anything?
     \end{itemize}
     \item If there's time, also try to improve the pin-routing area estimation (either by hand or by auto routing if available)
     \begin{itemize}
@@ -401,37 +401,42 @@ To achieve this work's objectives, the \gls{rtl} implementation must satisfy the
 Recall from \secref{sec:related-work} that each \gls{pe} consists of a forward and return pass, forming an internal feedback loop at the \gls{pe} level, violating \emph{fiction}'s input requirements.
 As a workaround, this work proposes a hierarchical \gls{rtl} implementation: the \gls{pe}'s core logic in the forward pass is implemented in strictly combinational \gls{rtl} as shown in Alg.~\ref{alg:pe-forward} to ensure compatibility with subsequent synthesis steps; clocked operation of the full \gls{pe} is captured in a higher level \gls{rtl} defining the component's input and output signals, pipelined internal signal steering, and synchronized signal timing for the return pass.
 
-\todo{Current code directly swaps the \texttt{*} and \texttt{+} operations with the custom Verilog \glspl{alu}, but in principle it is also possible to specify them in the Yosys step. If we end up going down that route then it would make sense to move this paragraph to \secref{sec:methodology-eda}.}
-In \gls{rtl} Verilog, arithmetic operators such as \texttt{product = w * a} and \texttt{product + partial\_sum\_in} are typically mapped to specific \glspl{alu} during synthesis (see \secref{sec:methodology-eda}). Absent explicit guidance, synthesis tools usually select \gls{cmos}-optimized implementations, which can underperform for \gls{fcn} due to different area and latency scaling in strictly planar fabrics where gates and wires share the same plane \cite{kim2010multipliers}.
-To ensure technology-appropriate choices, gate-level implementations of a ripple-carry adder and an array multiplier are instantiated in the \gls{pe}, both shown to suit \gls{fcn} because their simplicity reduces wiring congestion and minimizes the need for crossovers \cite{kim2010multipliers}.
+\TODO{Mention that the bit width of weights and activations are adjustable.}
 
-Correctness was validated with test benches for the \glspl{alu}, the combinational \gls{pe} core, and the clocked \gls{pe}. In preload mode, weights were stored correctly; in compute mode, the \gls{mac} produced correct results for the input activations, stored weights, and incoming partial sums. Concurrent \gls{mac} operation was sustained by interleaving inputs to fully utilize all pipeline stages. All simulations were performed using Icarus Verilog~\cite{icarusverilog}. The logical correctness of the \gls{pe} was thus established prior to synthesis and physical mapping. The full open-source Verilog implementation is available on GitHub~\cite{githubsupplementary}.
+Correctness was validated with test benches for the combinational \gls{pe} core and the clocked \gls{pe}. In preload mode, weights were stored correctly; in compute mode, the \gls{mac} produced correct results for the input activations, stored weights, and incoming partial sums. Concurrent \gls{mac} operation was sustained by interleaving inputs to fully utilize all pipeline stages. All simulations were performed using Icarus Verilog~\cite{icarusverilog}. The logical correctness of the \gls{pe} was thus established prior to synthesis and physical mapping. The full open-source Verilog implementation is available on GitHub~\cite{githubsupplementary}.
 
 \subsection{Design Automation Workflow}\label{sec:methodology-eda}
 
-\TODO{If we're able to incorporate half-adder support in fiction and validate in gold, mention that here.}
+After verifying the \gls{rtl}, the combinational \gls{pe} core is ready for the \gls{rtl}-to-atoms synthesis flow. At the high level, this includes an \gls{rtl} to gate-level netlist synthesis in order to produce a \emph{fiction}-compatible netlist, which is then ingested into \emph{fiction} for a multistep synthesis workflow, ultimately yielding a dot-accurate \gls{sidb} layout.
 
-\OLD{
-After verifying the Verilog description, the \gls{rtl} design must be synthesized into a gate-level netlist in order for \emph{fiction} to process the design. We use Yosys~\cite{wolf2013yosys} to synthesize the \gls{rtl} Verilog description into an \gls{aig} netlist and ABC's \textit{\&deepsyn}~\cite{brayton2010abc} optimization strategy to reduce the network's node count. The resulting gate-level Verilog is then provided to \emph{fiction}~\cite{walter2019fiction} for synthesis to an \gls{sidb} layout using its \gls{fcn}-specific \gls{eda} tooling in the following multi-step process:
+Starting with the \gls{rtl}-to-netlist stage, this work uses \emph{Yosys}~\cite{wolf2013yosys} to map arithmetic operators such as multiplication (\texttt{*}) and accumulation (\texttt{+}) into gate-level \gls{alu} structures.
+Absent explicit directives, \emph{Yosys} selects \gls{cmos}-optimized \gls{alu} implementations, which can underperform in \gls{fcn} because their strictly planar fabrics force gates and wires to share the same plane, altering the area and latency trade-offs \cite{kim2010multipliers}. To ensure technology-appropriate choices, this work supplies explicit gate-level descriptions of a ripple-carry adder and an array multiplier to the \emph{Yosys} technology mapper. These implementations have been shown to suit \gls{fcn} technologies thanks to their regular structure, which eases wiring congestion and limits the need for crossovers \cite{kim2010multipliers}.
+The mapped netlist is then rewritten as an \gls{aig} with \emph{Yosys} and optimized with ABC's \textit{\&deepsyn}~\cite{brayton2010abc} strategy to reduce the network's node count.
+Finally, the resulting gate-level netlist is validated against the \gls{pe}-core test benches to confirm functional correctness.
+
+The verified gate-level netlist is subsequently forwarded to \emph{fiction}~\cite{walter2019fiction}, whose \gls{fcn}-aware toolchain synthesizes it into an \gls{sidb} layout following the methodology in \cite{walter2022hexagons}:
 %
 \begin{enumerate}
-    \item Technology mapping is conducted to map the \gls{aig} into gates that are available in the \emph{Bestagon} gate library~\cite{walter2022hexagons}, which further reduces the node count via the expressive power of a full gate library over AND/INV primitives.
-    \item Placement and routing with the \textit{ortho} algorithm~\cite{walter2019scalable} produces a layout on a Cartesian grid representing the full logic implementation with valid gate placements that are connected by wires.
-    \item Post-layout optimizations are run to reduce the footprint of the layout~\cite{hofmann2023postlayout, hofmann2024late}.
-    \item The Cartesian layout is then remapped onto a hexagonal grid~\cite{hofmann2023scalable} in preparation for applying the \emph{Bestagon} library.
-    \item SAT-based equivalence checking~\cite{walter2020verification} is performed to verify that the mapped, optimized, and hexagonalized layout faithfully implements the gate-level Verilog specification.
-    \item The \emph{Bestagon} library~\cite{walter2022hexagons} is applied to the hexagonalized layout, yielding a dot-accurate \gls{sidb} implementation of the design.
+  \item Technology mapping maps the \gls{aig} onto the \emph{Bestagon} gate library~\cite{walter2022hexagons}, exploiting the library's richer primitives to shrink the logic compared with an AND/INV-only basis.
+  \item Placement and routing with the \textit{ortho} algorithm~\cite{walter2019scalable} produces a layout on a Cartesian grid.
+  \item \gls{plo}~\cite{hofmann2023postlayout, hofmann2024late} reduces the footprint of the routed design.
+  \item The Cartesian layout is projected onto a hexagonal grid~\cite{hofmann2023scalable} in preparation for applying the \emph{Bestagon} gates.
+  \item SAT-based equivalence checking~\cite{walter2020verification} confirms that the optimized, hexagonalized layout preserves the gate-level behavior.
+  \item The \emph{Bestagon} library~\cite{walter2022hexagons} is applied to the hexagonalized layout, yielding a dot-accurate \gls{sidb} implementation of the design.
 \end{enumerate}
-}
 
-\TODO{If we incorporate post-Yosys test bench (to ensure PE-forward functionality is maintained) then mention it too.}
+In parallel, we augmented \emph{fiction} itself to better target \gls{sidb} design. Recent robustness studies propose a unified cost function for \glspl{fom} for \gls{sidb} gates~\cite{drewniok2024unifying} that fold in the dominant cost drivers---operational domain size~\cite{ng2020siqad, walter2023reducing}, thermal stability~\cite{drewniok2023temperature}, band-bending effects~\cite{pitters2011charge}, defect sensitivity~\cite{ng2024simulating, huff2019electrostatic, croshaw2020atomic}, and related factors---into a single score $\chi$. This work adopts $\chi$ as the objective for the technology mapper so that the flow prefers gates with higher predicted robustness, even when a less stable configuration might use fewer devices. The resulting trade-offs are examined in \secref{sec:results-and-discussion}.
 
-\OLD{As part of this investigation, we have also contributed various improvements to \emph{fiction} to further optimize the \gls{eda} tools for \gls{sidb} workflows.
-Recent works on \gls{sidb} logic robustness have culminated into the proposal of unified \glspl{fom} for \gls{sidb} gates~\cite{drewniok2024unifying}, which comprehensively capture currently known cost functions that can impact the robustness of \gls{sidb} gates: operational domain size~\cite{ng2020siqad, walter2023reducing}, thermal resilience~\cite{drewniok2023temperature}, band bending~\cite{pitters2011charge}, defect~\cite{ng2024simulating, huff2019electrostatic, croshaw2020atomic}, and more. The scores achieved by each metric are weighted and averaged to obtain $\chi$, a \gls{fom} assigned to the gate. Our gate library uses $\chi$ as the cost function for the technology mapper that will thus favor the most stable gates even if a certain logic could have been implemented with fewer, albeit less stable, selection of gates.
-The impact of this in the final layout will be compared in \secref{sec:results-and-discussion}.}
+% \OLD{As part of this investigation, we have also contributed various improvements to \emph{fiction} to further optimize the \gls{eda} tools for \gls{sidb} workflows.
+% Recent works on \gls{sidb} logic robustness have culminated into the proposal of unified \glspl{fom} for \gls{sidb} gates~\cite{drewniok2024unifying}, which comprehensively capture currently known cost functions that can impact the robustness of \gls{sidb} gates: operational domain size~\cite{ng2020siqad, walter2023reducing}, thermal resilience~\cite{drewniok2023temperature}, band bending~\cite{pitters2011charge}, defect~\cite{ng2024simulating, huff2019electrostatic, croshaw2020atomic}, and more. The scores achieved by each metric are weighted and averaged to obtain $\chi$, a \gls{fom} assigned to the gate. Our gate library uses $\chi$ as the cost function for the technology mapper that will thus favor the most stable gates even if a certain logic could have been implemented with fewer, albeit less stable, selection of gates.
+% The impact of this in the final layout will be compared in \secref{sec:results-and-discussion}.}
 
-\OLD{We have also improved the hexagonalization step to better align with \gls{sidb} layout expectations. The Cartesian layout prior to hexagonalization employs the 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional} where all input pins are placed along the top and left borders, and signals subsequently flow diagonally from top-left to bottom-right. In prior implementations of hexagonalization, the Cartesian layout is then rotated by $45^\circ$ and projected onto a hexagon grid~\cite{hofmann2023scalable} such that signals flow top-down. As a result, input pins on the hexagonal layout tend to have a $y$ offset from the top. This can negatively impact the theoretical throughput of the layout as some input pins might have to be held at the same value over multiple clock cycles in order to synchronize with other inputs.
-These constraints can be alleviated by extending all input pins to the top edge of the layout; we have thus updated the hexagonalization algorithm to perform this extra step which yields fully synchronized circuit layouts.}
+The hexagonalization algorithm was also revised in this work to align the generated layouts with \gls{sidb} clocking expectations. The Cartesian layout prior to hexagonalization follows the 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional}, placing primary inputs along the north and west borders and letting data advance diagonally. Earlier hexagonalization routines~\cite{hofmann2023scalable} rotated this grid by $45^\circ$ and projected it onto the hex lattice, which left many inputs recessed from the top edge. Those offsets lower the attainable throughput because some signals must be held across multiple cycles to rejoin the global timing. The updated flow stretches every input and output channel to the top and bottom boundaries after projection, producing layouts whose ports are time-aligned as they enter and exit the hexagonal fabric.
+
+% \OLD{We have also improved the hexagonalization step to better align with \gls{sidb} layout expectations. The Cartesian layout prior to hexagonalization employs the 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional} where all input pins are placed along the top and left borders, and signals subsequently flow diagonally from top-left to bottom-right. In prior implementations of hexagonalization, the Cartesian layout is then rotated by $45^\circ$ and projected onto a hexagon grid~\cite{hofmann2023scalable} such that signals flow top-down. As a result, input pins on the hexagonal layout tend to have a $y$ offset from the top. This can negatively impact the theoretical throughput of the layout as some input pins might have to be held at the same value over multiple clock cycles in order to synchronize with other inputs.
+% These constraints can be alleviated by extending all input pins to the top edge of the layout; we have thus updated the hexagonalization algorithm to perform this extra step which yields fully synchronized circuit layouts.}
+
+\TODO{If we're able to incorporate half-adder support in fiction and validate in gold, mention that here.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Results and Discussion
@@ -510,7 +515,7 @@ These constraints can be alleviated by extending all input pins to the top edge 
     \begin{minipage}{\linewidth}
       \footnotesize
       \vspace{0.5em}
-      Runtime values are in seconds; $w$, $h$, and $A$ are the width, height, and resulting area (in tiles) of the layout, respectively; dimensions refer to the area footprint of the synthesized \gls{sidb} layout after applying the Bestagon gate library \cite{walter2022hexagons}; $|\text{SiDBs}|$ indicates the number of \glspl{sidb}. \TODO{Add columns: FoM Awareness, HA Used (if applicable)} \TODO{Add footnote to Blueprint area that it's for the full PE, whereas the rest are only for the PE-forward path.}
+      Runtime values are in seconds; $w$, $h$, and $A$ are the width, height, and resulting area (in tiles) of the layout, respectively; dimensions refer to the area footprint of the synthesized \gls{sidb} layout after applying the Bestagon gate library \cite{walter2022hexagons}; $|\text{SiDBs}|$ indicates the number of \glspl{sidb}. \TODO{Add columns: bit-width of weights and activations, FoM Awareness, HA Used (if applicable)} \TODO{Add footnote to Blueprint area that it's for the full PE, whereas the rest are only for the PE-forward path.}
     \end{minipage}
   \end{minipage}
 \end{table*}
