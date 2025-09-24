@@ -230,30 +230,34 @@ Objectives that, together, satisfy \SI{50}{\percent} new contents rule:
 \begin{todolist}
     \item[\done] Implement ripple-carry adder and array multiplier in Verilog with a wrapper that automatically generates N-bit versions
     \item[\done] Testbench the above for verification
-    \item[\done] In the Processing Element, replace multiplication and accumulation operations with the optimized \glspl{alu}
+    \item[\done] In the Processing Element, replace multiplication and accumulation operations with the optimized \glspl{alu} \textcolor{orange}{using Yosys's technology mapper}
     \item[\done] Synthesize and report changes
-    \item Post-Yosys equivalence check (use PE-forward test bench)
-    \item[\done] Extend Verilogs to accept arbitrary width and activation bit-width settings
-    \item Add half-adder gate to technology mapper
+    \item \textcolor{orange}{Post-Yosys equivalence check (use PE-forward test bench)}
+    \item[\done] \textcolor{orange}{Extend Verilogs to accept arbitrary width and activation bit-width settings}
+    \item New table similar to DATE's table: report multiple algorithm combinations (e.g., ortho with and without PLO, FoM vs. uniform gates), \textcolor{orange}{test multiple bit-widths (W8A8, W4A4, W2A2)}, report FoM-informed results similarly
     \begin{itemize}
-        \item Simon to look into adding HA to TM and synthesizing via \emph{gold}
+        \item Further study possible with gold with different cost metrics (e.g., area vs crossing vs area-crossing product etc.)
+        \item Using CP as cost function might give us more squarish outputs
     \end{itemize}
-    \item New table similar to DATE's table: report multiple algorithm combinations (e.g., ortho with and without PLO, FoM vs. uniform gates), test multiple bit-widths (W8A8, W4A4), report FoM-informed results similarly
 \end{todolist}
 
 \subsection*{Stretch goals}
 
-Only do if there's time and if it's worth it:
-%
 \begin{todolist}
-    \item Create multi-attempt averaged score benchmark set:
+    \item Add half-adder gate to technology mapper
+    \begin{itemize}
+        \item \textcolor{orange}{Simon to look into adding HA to TM and synthesizing via \emph{gold}}
+        \item \textcolor{orange}{Highly good-to-have if achievable without major roadblocks, do not sink too much time if there are significant hurdles!}
+    \end{itemize}
+    \item \textcolor{red}{Demoted from main objectives:} Create multi-attempt averaged score benchmark set:
     \begin{itemize}
         \item To clarify, this is an attempt at realizing that ``scientifically rigorous'' synthesis results comparison
         \item We can create a long-running script that makes $N$ attempts at deepsyn, TM to FoM-informed and uniform gates, $M$ attempts at \emph{gold} (if tractable). Since \emph{PLO} is deterministic we won't have to rerun that. This means $2 \cdot N \cdot M$ attempts in total. Missing anything?
     \end{itemize}
     \item If there's time, also try to improve the pin-routing area estimation (either by hand or by auto routing if available)
     \begin{itemize}
-        \item IMO more time consuming and possibly not worth it
+        \item Marcel: can try using color routing in fiction
+        \item Alternatively, Ben's planar placement \& routing algorithm
     \end{itemize}
 \end{todolist}
 
@@ -300,7 +304,7 @@ To move beyond approximations and toward practical implementation, an earlier co
     \label{fig:sidb-logic}
 \end{figure}
 
-\glspl{sidb} can be manufactured on the surface of hydrogen-passivated Silicon(100)-2$\times$1 with the tip of a scanning-tunneling microscope \cite{achal2018lithography, huff2017atomic, pitters2024atomically}. Each \gls{sidb} is capable of holding discrete charge states, including negative, neutral, or positive; the exact charge states in ensembles of \glspl{sidb} is determined by bulk doping levels and external electrostatic influences~\cite{pitters2024atomically}. Charges can be shared among closely positioned \glspl{sidb}, allowing binary logic states to be encoded in the position of a charge inside an \gls{sidb}-pair (\fref{sfig:sidb-logic-pairs}). Careful arrangements of \gls{sidb}-pairs can further implement logic gates, such as an experimentally-demonstrated OR gate which measured just $5\times\SI{6}{\nm^2}$ \cite{huff2018binary}. \gls{cad}-assisted explorations through \emph{SiQAD} continued to drive \gls{sidb} gate and circuit explorations~\cite{ng2020siqad, bahar2020atomic, ahmadpour2023energyaware, vieira2022threeinput}, culminating in the creation of the \emph{Bestagon} standard-tile library \cite{walter2022hexagons} which features standardized \gls{io} pin locations with a blank central canvas within which \glspl{sidb} are placed for logic implementation. A NAND gate from the \emph{Bestagon} library is illustrated in \fref{sfig:sidb-logic-hex-tile}. This has allowed \emph{fiction} to take gate-level netlists as input and synthesize dot-accurate, fabricable \gls{sidb} layouts, forming the backbone of this work.
+\glspl{sidb} can be manufactured on the surface of hydrogen-passivated Silicon(100)-2$\times$1 with the tip of a scanning-tunneling microscope \cite{achal2018lithography, huff2017atomic, pitters2024atomically}. Each \gls{sidb} is capable of holding discrete charge states, including negative, neutral, or positive; the exact charge states in ensembles of \glspl{sidb} is determined by bulk doping levels and external electrostatic influences~\cite{pitters2024atomically}. Charges can be shared among closely positioned \glspl{sidb}, allowing binary logic states to be encoded in the position of a charge inside an \gls{sidb}-pair (\fref{sfig:sidb-logic-pairs}). Careful arrangements of \gls{sidb}-pairs can further implement logic gates, such as an experimentally-demonstrated OR gate which measured just $5\times\SI{6}{\nm^2}$ \cite{huff2018binary}. \gls{cad}-assisted explorations through \emph{SiQAD} continued to drive \gls{sidb} gate and circuit explorations~\cite{ng2020siqad, bahar2020atomic, ahmadpour2023energyaware, vieira2022threeinput}, culminating in the creation of the \emph{Bestagon} standard-tile library \cite{walter2022hexagons} which features standardized \gls{io} pin locations with a blank central canvas within which \glspl{sidb} are placed for logic implementation. A NAND gate from the \emph{Bestagon} library is illustrated in \fref{sfig:sidb-logic-hex-tile}. This has allowed \emph{fiction} to take gate-level netlists as input and synthesize dot-accurate, fabricable \gls{sidb} layouts, forming the backbone of this work. \TODO{Mention ortho and gold here already so that we don't have to shoehorn an explanation in methodology.}
 
 \gls{sidb} logic, like other \gls{fcn} families, uses spatially partitioned clock zones to enforce directed dataflow \cite{ng2020siqad, chiu2020poissolver}. Hanging electrodes apply sinusoidal potentials that modulate surface band bending and, in turn, charge density \cite{}. In four-phase, \SI{90}{\degree}-offset clocking, intervening low-potential zones suppress coupling between adjacent active regions, effectively inserting buffers so signals advance in fine-grained pipeline steps. A simple, area-efficient layout arranges zones row-wise to support unidirectional, purely combinational logic (\TODO{add figure}). Interfacing to \gls{cmos} uses electrostatically biased inputs via electrodes \cite{chiu2020poissolver}, and outputs sensed by charge-sensitive devices (e.g., single-electron transistors) \cite{fuechsle2012singleatom, prager2009integration, bohloul2017quantum}.
 
@@ -417,7 +421,7 @@ The verified gate-level netlist is subsequently forwarded to \emph{fiction}~\cit
 %
 \begin{enumerate}
   \item Technology mapping maps the \gls{aig} onto the \emph{Bestagon} gate library~\cite{walter2022hexagons}, exploiting the library's richer primitives to shrink the logic compared with an AND/INV-only basis.
-  \item Placement and routing with the \textit{ortho} algorithm~\cite{walter2019scalable} produces a layout on a Cartesian grid.
+  \item Placement and routing with the \textit{ortho}~\cite{walter2019scalable} or \gls{gold}~\cite{hofmann2024born} algorithm produces a layout on a Cartesian grid.
   \item \gls{plo}~\cite{hofmann2023postlayout, hofmann2024late} reduces the footprint of the routed design.
   \item The Cartesian layout is projected onto a hexagonal grid~\cite{hofmann2023scalable} in preparation for applying the \emph{Bestagon} gates.
   \item SAT-based equivalence checking~\cite{walter2020verification} confirms that the optimized, hexagonalized layout preserves the gate-level behavior.
@@ -427,6 +431,8 @@ The verified gate-level netlist is subsequently forwarded to \emph{fiction}~\cit
 In parallel, we augmented \emph{fiction} itself to better target \gls{sidb} design. Recent robustness studies propose a unified cost function for \glspl{fom} for \gls{sidb} gates~\cite{drewniok2024unifying} that fold in the dominant cost drivers---operational domain size~\cite{ng2020siqad, walter2023reducing}, thermal stability~\cite{drewniok2023temperature}, band-bending effects~\cite{pitters2011charge}, defect sensitivity~\cite{ng2024simulating, huff2019electrostatic, croshaw2020atomic}, and related factors---into a single score $\chi$. This work adopts $\chi$ as the objective for the technology mapper so that the flow prefers gates with higher predicted robustness, even when a less stable configuration might use fewer devices. The resulting trade-offs are examined in \secref{sec:results}.
 
 The hexagonalization algorithm was also revised in this work to align the generated layouts with \gls{sidb} clocking expectations. The Cartesian layout prior to hexagonalization follows the 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional}, placing primary inputs along the north and west borders and letting data advance diagonally. Earlier hexagonalization routines~\cite{hofmann2023scalable} rotated this grid by $45^\circ$ and projected it onto the hex lattice, which left many inputs recessed from the top edge. Those offsets lower the attainable throughput because some signals must be held across multiple cycles to rejoin the global timing. The updated flow stretches every input and output channel to the top and bottom boundaries after projection, producing layouts whose ports are time-aligned as they enter and exit the hexagonal fabric.
+
+\TODO{As a result of this hexagonalization, Cartesian layouts that appeared smaller could end up under-performing when rotated by \SI{45}{\degree}. Mention \emph{gold} cost function guide to generate more square layouts which achieve lower post-hexagonalization area.}
 
 \TODO{If we're able to incorporate half-adder support in fiction and validate in gold, mention that here.}
 
