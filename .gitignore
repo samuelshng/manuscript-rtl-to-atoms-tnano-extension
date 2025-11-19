@@ -45,3 +45,5 @@
 .bak 
 .mtc
 build/
+.DS_Store
+*.pyc
