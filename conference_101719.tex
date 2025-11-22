@@ -256,11 +256,11 @@ Objectives that, together, satisfy \SI{50}{\percent} new contents rule:
     %     \item To clarify, this is an attempt at realizing that ``scientifically rigorous'' synthesis results comparison
     %     \item We can create a long-running script that makes $N$ attempts at deepsyn, TM to FoM-informed and uniform gates, $M$ attempts at \emph{gold} (if tractable). Since \emph{PLO} is deterministic we won't have to rerun that. This means $2 \cdot N \cdot M$ attempts in total. Missing anything?
     % \end{itemize}
-    \item If there's time, also try to improve the pin-routing area estimation (either by hand or by auto routing if available)
-    \begin{itemize}
-        \item Marcel: can try using color routing in fiction
-        \item Alternatively, Ben's planar placement \& routing algorithm
-    \end{itemize}
+    % \item If there's time, also try to improve the pin-routing area estimation (either by hand or by auto routing if available)
+    % \begin{itemize}
+    %     \item Marcel: can try using color routing in fiction
+    %     \item Alternatively, Ben's planar placement \& routing algorithm
+    % \end{itemize}
 \end{todolist}
 
 
@@ -326,8 +326,10 @@ The remainder of this manuscript is structured as follows. \secref{sec:backgroun
     }
     \caption{
         \TODO{Paraphrase.}
+        \OLD{
         (\textbf{a}) A logic unit cell made of a pair of \glspl{sidb} sharing a single negative charge~\cite{huff2018binary} simulated in \emph{SiQAD}~\cite{ng2020siqad}. \textbf{Top:} the unit cell is illustrated without charges for readability; \textbf{middle:} unit cell simulated with charge, alongside an additional \gls{sidb} placed to the right (dubbed a \textit{perturber}), biasing the unit cell to take on logic state $0$; \textbf{bottom:} like above but with the perturber moved to the left, biasing the unit cell to take on logic $1$. Reprinted from~\cite{ng2023blueprint} with permission.
         (\textbf{b}) A \textsc{nand} gate from the \emph{Bestagon} library~\cite{walter2022hexagons} which defines standard locations for I/O pins and a canvas at the center which allows flexible placement of \glspl{sidb} to implement logic gates. Input pins are located at the top with input logic states set by input perturbers---a closer perturber pushes the input wire to the logic $1$ position, while a further one allows charges to take on logic $0$ state. The output is read out at the output pin located at the bottom. Adapted from~\cite{drewniok2025quicktrace} with permission.
+        }
     }
     \label{fig:sidb-logic}
 \end{figure}
@@ -357,8 +359,9 @@ Interfacing with \gls{cmos} can be achieved by biasing inputs electrostatically 
     \label{fig:mxu-systolic-array}
 \end{figure}
 
-Related \gls{fcn} design flows have been develoepd for \gls{nml}. \emph{ToPoliNano}~\cite{riente2017topolinano} provides a \gls{cmos}-like, top-down flow from structural VHDL descriptions to iNML layouts with clocking-aware placement, routing, and performance analysis.
-Complementing this, \emph{FUNCODE}~\cite{garlando2021funcode} infers VHDL netlists from custom \gls{nml} layouts, enabling device-to-system analysis of \gls{nml} circuits using HDL simulators. These works demonstrate mature \gls{fcn} \gls{cad} capabilities in the \gls{nml} domain. In contrast, the present work targets atomic-scale \gls{sidb} logic, integrating \gls{sidb}-specific standard cells, robustness-driven technology mapping, and an \gls{mxu} \gls{pe} \gls{rtl} to obtain dot-accurate \gls{sidb} layouts for machine learning workloads.
+Related \gls{fcn} design flows have been developed for \gls{nml}. \emph{ToPoliNano}~\cite{riente2017topolinano} provides a \gls{cmos}-like, top-down flow from structural VHDL descriptions to in-plane \gls{nml} layouts with clocking-aware placement, routing, and performance analysis.
+Complementing this, \emph{FUNCODE}~\cite{garlando2021funcode} infers VHDL netlists from custom \gls{nml} layouts, enabling device-to-system analysis of \gls{nml} circuits using HDL simulators. These works demonstrate mature \gls{fcn} \gls{cad} capabilities in the \gls{nml} domain.
+In contrast, the present work targets atomic-scale \gls{sidb} logic, integrating \gls{sidb}-specific standard cells, robustness-driven technology mapping, and an \gls{mxu} \gls{pe} \gls{rtl} to obtain dot-accurate \gls{sidb} layouts for machine learning workloads\todo{Is this sentence trying to add too much detail to the ``in contrast'' examples? It would have made sense if this was at the end of the section but this is the beginning of the Related Work section with a lot more after}.
 
 Before dedicated \gls{sidb}-aware \gls{eda} tooling became available, studies of \gls{sidb} applications were limited and largely depended on manual \gls{cad} prototyping with extrapolated area and latency estimates.
 One such example was an \gls{sidb} \gls{mxu}~\cite{ng2023blueprint} for \gls{ml} acceleration, which mirrored design choices from Google's \gls{tpu}v1~\cite{jouppi2017indatacenter}: the matrix-vector multiplications underpinning \gls{ml} workloads were realized as 8-bit integer \gls{mac} operations to reduce computational cost, and both designs employed a systolic-array architecture relying on regular arrangements of \glspl{pe}---homogeneous logic modules that operate on their inputs and pass results to adjacent \glspl{pe}---to perform computation (\fref{fig:mxu-systolic-array}).
@@ -457,7 +460,7 @@ Absent explicit directives, \emph{Yosys} selects \gls{cmos}-optimized \gls{alu} 
 The mapped netlist is then rewritten as an \gls{aig} with \emph{Yosys} and optimized with ABC's \textit{\&deepsyn}~\cite{brayton2010abc} strategy to reduce the network's node count.
 Finally, the resulting gate-level netlist is validated against the \gls{pe}-core test benches to confirm functional correctness.
 
-\subsection{Netlist-to-atoms}
+\subsection{Netlist-to-Atoms}
 
 \subsubsection{\textit{fiction} Synthesis Flow}
 
@@ -476,8 +479,8 @@ Over the course of this study, several pain points were identified with \emph{fi
 
 \subsubsection{FoM-aware Technology Mapping}
 
-\TODO{Context of prior lack of FoM-aware TM}.
-Recent advancements in \gls{sidb} logic robustness studies have culminated in the creation of a unified cost function for \glspl{fom} for \gls{sidb} gates~\cite{drewniok2024unifying}. The cost function encompasses the dominant cost drivers---operational domain size~\cite{ng2020siqad, walter2023reducing}, thermal stability~\cite{drewniok2023temperature}, band-bending effects~\cite{pitters2011charge}, defect sensitivity~\cite{ng2024simulating, huff2019electrostatic, croshaw2020atomic}, and related factors---into a single score $\chi$. This work adopts $\chi$ as the objective for the technology mapper so that the flow prefers gates with higher predicted robustness, even when a less stable configuration might use fewer devices. The resulting trade-offs are examined in \secref{sec:results}.
+\TODO{Add one-liner context that prior \emph{fiction} \gls{sidb} work treated all gates equally without conception of \glspl{fom}}.
+Recent advancements in \gls{sidb} logic robustness studies have culminated in the creation of a unified cost function for \glspl{fom} for \gls{sidb} gates~\cite{drewniok2024unifying}. The cost function encompasses the dominant cost drivers---operational domain size~\cite{ng2020siqad, walter2023reducing}, thermal stability~\cite{drewniok2023temperature}, band-bending effects~\cite{pitters2011charge}, defect sensitivity~\cite{ng2024simulating, huff2019electrostatic, croshaw2020atomic}, and related factors---into a single score $\chi$. This work adopts $\chi$ as the objective for the technology mapper so that the flow prefers gates with higher predicted robustness, even when a less stable configuration might use fewer devices\todo{maybe rephrase the last sentence a bit, something like ``even if it comes at the cost of...''}. The resulting trade-offs are examined in \secref{sec:results}.
 
 \subsubsection{Placement and Routing Improvements for SiDBs}
 
@@ -551,7 +554,7 @@ Multiple bit-width configurations of the combinational \gls{pe}-core (\secref{se
         $w$ & $\times$ & $h$ & $=$ & $A$ & \multicolumn{1}{c}{\textsc{W $\times$ H [\si{\nm} $\times$ \si{\nm}]}} &  & \\
         \midrule
         % --- Hand-designed baseline
-        {Blueprint~\cite{ng2023blueprint}} & Hand made &
+        {Blueprint~\cite{ng2023blueprint}} & Manual approximation &
         -- & $\times$ & -- & $=$ & -- & \num{5000} $\times$ \num{8150} & -- & -- \\
         % --- IEEE-NANO baseline
         {Unspecified \glspl{alu}~\cite{ng2025building}} & \emph{ortho} + \emph{PLO} &
