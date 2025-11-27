@@ -531,50 +531,50 @@ Finally, \secref{sec:results-discussion} discusses these findings in the context
 % \end{table*}
 
 \begin{table}
-  \caption{Extended synthesis comparison across quantization and routing settings}
+  \caption{Synthesis comparison across \gls{mxu} and \gls{eda} configurations}
   \centering
   \label{tab:pe-results-extended}
   \begin{minipage}{\linewidth}
     \centering
     \begin{tabular}{l@{\hskip 6pt}l@{\hskip 6pt}l@{\hskip 12pt}
                     r@{~$\times$~}l@{~$=$~}r@{\hskip 12pt}
-                    r@{~$\times$~}l@{~$=$~}r}
+                    r}
       \toprule
-      \multirow[c]{2}{*}{\makecell[tl]{\textsc{Experiment}}} &
+      \multirow[c]{2}{*}{\makecell[tl]{\textsc{\glspl{alu}}}} &
       \multirow[c]{2}{*}{\makecell[tl]{\textsc{PE}}} &
       \multirow[c]{2}{*}{\makecell[tl]{\textsc{Alg}}} &
       \multicolumn{3}{c}{\textsc{Uniform TM}} &
-      \multicolumn{3}{c}{\textsc{FoM-aware TM}} \\
-      \cmidrule(lr{12pt}){4-6} \cmidrule(lr){7-11}
-        & & & $w$ & $h$ & $A_\text{uni}$ & $w$ & $h$ & $A_\text{FoM}$ & \multicolumn{2}{r}{\textsc{vs} $A_\text{uni}$)} \\
+      \multirow[c]{2}{*}{\makecell[tl]{$A_\text{FoM}$}} \\
+      % \textsc{FoM-aware TM} \\
+      \cmidrule(lr{12pt}){4-6}
+        & & & $w$ & $h$ & $A_\text{uni}$ & \\
       \midrule
-      Default \glspl{alu}~\cite{ng2025building} & W8A8 & \emph{ortho} &
+      Default~\cite{ng2025building} & W8A8 & \emph{ortho} &
       \num{515} & \num{1043} & \num{537145} &
-      \num{516} & \num{1049} & \num{541284} & + & 0.77 \\
-      \cmidrule(lr){1-11}
-      \multirow[t]{5}{*}{\makecell[tl]{Optimized \glspl{alu}\\(This work)}} & W8A8 & \emph{ortho} &
+      \num{541284} \\
+      \cmidrule(lr){1-7}
+      \multirow[t]{5}{*}{\makecell[tl]{Optimized\\(This work)}} & W8A8 & \emph{ortho} &
       \num{474} & \num{967} & \num{458358} &
-      \num{478} & \num{985} & \num{470830} & + & 2.72 \\[0.8ex]
+      \num{470830} \\[0.8ex]
         & \multirow[t]{2}{*}{W4A4} & \emph{ortho} &
       \num{143} & \num{333} & \num{47619} &
-      \num{164} & \num{346} & \num{56744} & + & 19.16 \\
+      \num{56744} \\
         &  & \emph{gold} &
       \num{116} & \num{241} & \num{27956} &
-      \num{182} & \num{385} & \num{70070} & + & 150.64 \\[0.8ex]
+      \num{70070} \\[0.8ex]
         & \multirow[t]{2}{*}{W2A2} & \emph{ortho} &
       \num{67} & \num{151} & \num{10117} &
-      \num{69} & \num{157} & \num{10833} & + & 7.08 \\
+      \num{10833} \\
         &  & \emph{gold} &
       \num{48} & \num{98} & \num{4704} &
-      \num{51} & \num{107} & \num{5457} & + & 16.01 \\
+      \num{5457} \\
       \bottomrule
     \end{tabular}
     \begin{minipage}{\linewidth}
       \footnotesize
       \vspace{0.5em}
-      Here $w$, $h$, and $A$ denote the tile counts along width, height, and footprint ($A = w \times h$); ``uniform TM'' and ``\gls{fom}-aware TM'' denote the Bestagon variant used for technology mapping; ``vs $A_\text{uni}$'' reports the percentage change imposed by \gls{fom}-aware technology mapping. ``Default'' and ``optimized'' \glspl{alu} indicate whether adder/multiplier selection was left to \emph{Yosys}'s defaults or specifically defined. %\TODO{Do a final check with sweep data to make sure the reported minimums accurately reflect latest results.}
-      \TODO{Simon: Do we really need the "vs $A_{uni}$" column? I think we could also squeeze the table into one column without it then.}
-      \TODO{Simon: Should we also mention here that PLO was used together with each algorithm?}
+      Here, ``default'' and ``optimized'' \glspl{alu} indicate whether adder/multiplier selection was left to \emph{Yosys}'s defaults or specifically defined; $w$, $h$, and $A$ denote the tile counts along width, height, and footprint ($A = w \times h$); $A_\text{uni}$ and $A_\text{FoM}$ denote the Bestagon variant used for technology mapping.  %\TODO{Do a final check with sweep data to make sure the reported minimums accurately reflect latest results.}
+      \gls{plo} was used together with each algorithm.
     \end{minipage}
   \end{minipage}
 \end{table}
