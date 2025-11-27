@@ -299,11 +299,8 @@ The remainder of this manuscript is structured as follows. \secref{sec:backgroun
         \label{sfig:sidb-logic-hex-tile}
     }
     \caption{
-        \TODO{Paraphrase.}
-        \OLD{
-        (\textbf{a}) A logic unit cell made of a pair of \glspl{sidb} sharing a single negative charge~\cite{huff2018binary} simulated in \emph{SiQAD}~\cite{ng2020siqad}. \textbf{Top:} the unit cell is illustrated without charges for readability; \textbf{middle:} unit cell simulated with charge, alongside an additional \gls{sidb} placed to the right (dubbed a \textit{perturber}), biasing the unit cell to take on logic state $0$; \textbf{bottom:} like above but with the perturber moved to the left, biasing the unit cell to take on logic $1$. Reprinted from~\cite{ng2023blueprint} with permission.
-        (\textbf{b}) A \textsc{nand} gate from the \emph{Bestagon} library~\cite{walter2022hexagons} which defines standard locations for I/O pins and a canvas at the center which allows flexible placement of \glspl{sidb} to implement logic gates. Input pins are located at the top with input logic states set by input perturbers---a closer perturber pushes the input wire to the logic $1$ position, while a further one allows charges to take on logic $0$ state. The output is read out at the output pin located at the bottom. Adapted from~\cite{drewniok2025quicktrace} with permission.
-        }
+        (\textbf{a}) Charge-based \gls{sidb} logic unit cell: a pair of closely spaced \glspl{sidb} share a single excess electron whose position encodes logic $0$ or $1$, controlled by the location of a nearby ``perturber'' \gls{sidb}. The top panel shows the geometric configuration without explicit charges, while the middle and bottom panels illustrate the simulated charge localization corresponding to \texttt{0} and \texttt{1}.
+        (\textbf{b}) Example \textsc{nand} gate from the \emph{Bestagon} standard-tile library, with inputs applied at the upper pins via perturbers and the output sensed at the lower pin; the central region hosts the \gls{sidb} arrangement realizing the gate. With permission, (a) is reproduced from~\cite{ng2023blueprint}, (b) is adapted from~\cite{drewniok2025quicktrace}.
     }
     \label{fig:sidb-logic}
 \end{figure}
@@ -325,11 +322,11 @@ Interfacing with \gls{cmos} can be achieved by biasing inputs electrostatically 
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.95\linewidth]{figs/mxu.pdf}
+    \includegraphics[width=0.95\linewidth]{figs/mxu_sa_colored.pdf}
     \caption{
-        A 2D systolic array \gls{mxu} receiving quantized activations ($a$), weights ($w$), weight control signals ($C_w$), and partial sums ($s$). \Glspl{pe} inside the \gls{mxu} consist of a \gls{mac} unit, memory controller, and delay-line memory for weight storage. Signals propagate downward on the left side of the \gls{pe} (forward pass) and upwards on the right side (return pass).
+        A 2D systolic array \gls{mxu} receiving quantized activations ($a$), weights ($w$), weight control signals ($c_w$), and partial sums ($s$). \Glspl{pe} inside the \gls{mxu} consist of a \gls{mac} unit, memory controller, and delay-line memory for weight storage. Signals propagate downward on the left side of the \gls{pe} (forward pass) and upwards on the right side (return pass).asdf
         % \TODO{Consistent font size \& weight for I/O pins.} \TODO{Improve color scheme.} \TODO{Rounded corners in the right.}
-        \TODO{Simon: Is the capitalization of w and c consistent? For example its C in the left figure and c in the right (also regarding the caption)}
+        % \TODO{Simon: Is the capitalization of w and c consistent? For example its C in the left figure and c in the right (also regarding the caption)}
     }
     \label{fig:mxu-systolic-array}
 \end{figure}
@@ -667,7 +664,6 @@ Our hierarchical Verilog structure facilitates the synthesis of combinational co
 
 \OLD{One limitation faced by this study is the lack of control over the implementation of fundamental arithmetic units such as adders and multipliers. Since the design trade-offs of \gls{sidb} logic differ significantly from CMOS designs, it is possible that our workflow for synthesizing \gls{rtl} Verilog to gate-level Verilog using established tools like Yosys and ABC is introducing unnecessary overhead due suboptimal implementation choices. Further improvements to this synthesis step, as well as further developments to \emph{fiction}'s placement and routing algorithms, can bridge the gap between synthesized layouts and expert-designs and incentivize further development of novel applications optimized for \glspl{sidb}.}
 
-\TODO{Simon: I removed my middle name from reference 37+38 to make it consistent}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Bibliography
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
