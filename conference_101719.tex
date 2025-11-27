@@ -113,28 +113,7 @@
 % \renewcommand{\baselinestretch}{0.99}
 
 % Make \gls output with first letter of each word capitalized, not just first word
-\usepackage{mfirstuc}
-
-\makeatletter
-\let\oldmakefirstuc\makefirstuc
-\renewcommand*{\makefirstuc}[1]{%
-  \def\gls@add@space{}%
-  \mfu@capitalisewords#1 \@nil\mfu@endcap
-}
-\def\mfu@capitalisewords#1 #2\mfu@endcap{%
-  \def\mfu@cap@first{#1}%
-  \def\mfu@cap@second{#2}%
-  \gls@add@space
-  \oldmakefirstuc{#1}%
-  \def\gls@add@space{ }%
-  \ifx\mfu@cap@second\@nnil
-    \let\next@mfu@cap\mfu@noop
-  \else
-    \let\next@mfu@cap\mfu@capitalisewords
-  \fi
-  \next@mfu@cap#2\mfu@endcap
-}
-\makeatother
+% \usepackage{mfirstuc}
 
 \usepackage[acronym]{glossaries}
 
@@ -438,7 +417,7 @@ Because the \gls{pe} includes forward and return paths that form an internal fee
 To reconcile these constraints, this work adopts a hierarchical \gls{rtl} organization, separating the design into a combinational core and a clocked shell:
 %
 \begin{description}
-  \item[Combinational core:] The \gls{pe}'s forward-pass logic is implemented in strictly combinational \gls{rtl}, as shown in Alg.~\ref{alg:pe-forward},\TODO{Simon: shown in Algorithm instead of Alg.?} ensuring compatibility with subsequent synthesis steps.
+  \item[Combinational core:] The \gls{pe}'s forward-pass logic is implemented in strictly combinational \gls{rtl}, as shown in Algorithm~\ref{alg:pe-forward}, ensuring compatibility with subsequent synthesis steps.
   \item[Clocked shell:] A higher-level \gls{rtl} module captures the clocked operation of the full \gls{pe}, defining the component's input and output signals, pipelined internal signal steering, and synchronized signal timing for the return pass.
 \end{description}
 %
@@ -457,16 +436,16 @@ Finally, the resulting gate-level netlist is validated against the \gls{pe}-core
 
 \subsection{Netlist-to-Atoms}\label{sec:methodology-netlist-to-atoms}
 
-The gate-level netlist is then passed to the \emph{fiction} framework~\cite{walter2019fiction} for the second stage of the synthesis flow: physical design. This stage transforms the netlist into a dot-accurate \gls{sidb} layout through a multi-step process, which this work enhances with several optimizations for the \gls{sidb} platform.
+The gate-level netlist is then passed to \emph{fiction} for the second stage of the synthesis flow: physical design. This stage transforms the netlist into a dot-accurate \gls{sidb} layout through a multi-step process, which this work enhances with several optimizations for the \gls{sidb} platform.
 
 \subsubsection{\textit{fiction} Synthesis Flow}
 
-The verified gate-level netlist is subsequently forwarded to \emph{fiction}~\cite{walter2019fiction} \TODO{Simon: I don't think we have to cite fiction that often}, whose \gls{fcn}-aware toolchain synthesizes it into an \gls{sidb} layout following the synthesis flow proposed by \cite{walter2022hexagons}:
+The verified gate-level netlist is subsequently forwarded to \emph{fiction}, whose \gls{fcn}-aware toolchain synthesizes it into an \gls{sidb} layout following the synthesis flow proposed by \cite{walter2022hexagons}:
 %
 \begin{enumerate}
   \item Technology mapping maps the \gls{aig} onto the \emph{Bestagon} gate library~\cite{walter2022hexagons}, exploiting the library's richer primitives to shrink the logic compared with an AND/INV-only basis.
   \item Placement and routing with the \textit{ortho}~\cite{walter2019scalable} or \gls{gold}~\cite{hofmann2024born} \TODO{Simon: If we have enough space, there are two more papers about gold: https://ieeexplore.ieee.org/document/10966234 and https://ieeexplore.ieee.org/document/11197132} algorithm produces a layout on a Cartesian grid.
-  \item \Gls{plo}~\cite{hofmann2023postlayout, hofmann2024late} reduces the footprint of the routed design. \TODO{Simon: Post-layout optimization instead of Post-layout Optimization? Can we also cite the TCAD Journal version? https://ieeexplore.ieee.org/document/10916761}
+  \item \Gls{plo}~\cite{hofmann2023postlayout, hofmann2024late} reduces the footprint of the routed design. \TODO{Simon: Can we also cite the TCAD Journal version? https://ieeexplore.ieee.org/document/10916761}
   \item The Cartesian layout is projected onto a hexagonal grid~\cite{hofmann2023scalable} in preparation for applying the \emph{Bestagon} gates.
   \item SAT-based equivalence checking~\cite{walter2020verification} confirms that the hexagonalized layout preserves the gate-level behavior.
   \item The \emph{Bestagon} library~\cite{walter2022hexagons} is applied to the verified layout, yielding a dot-accurate, manufacturable \gls{sidb} layout.
