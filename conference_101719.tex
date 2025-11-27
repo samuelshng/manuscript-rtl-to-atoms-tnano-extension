@@ -444,8 +444,8 @@ The verified gate-level netlist is subsequently forwarded to \emph{fiction}, who
 %
 \begin{enumerate}
   \item Technology mapping maps the \gls{aig} onto the \emph{Bestagon} gate library~\cite{walter2022hexagons}, exploiting the library's richer primitives to shrink the logic compared with an AND/INV-only basis.
-  \item Placement and routing with the \textit{ortho}~\cite{walter2019scalable} or \gls{gold}~\cite{hofmann2024born} \TODO{Simon: If we have enough space, there are two more papers about gold: https://ieeexplore.ieee.org/document/10966234 and https://ieeexplore.ieee.org/document/11197132} algorithm produces a layout on a Cartesian grid.
-  \item \Gls{plo}~\cite{hofmann2023postlayout, hofmann2024late} reduces the footprint of the routed design. \TODO{Simon: Can we also cite the TCAD Journal version? https://ieeexplore.ieee.org/document/10916761}
+  \item Placement and routing with the \textit{ortho}~\cite{walter2019scalable} or \gls{gold}~\cite{hofmann2024born,hofmann2025physical,hofmann2025graphoriented} algorithm produces a layout on a Cartesian grid.
+  \item \Gls{plo}~\cite{hofmann2023postlayout,hofmann2024late,hofmann2025efficient} reduces the footprint of the routed design.
   \item The Cartesian layout is projected onto a hexagonal grid~\cite{hofmann2023scalable} in preparation for applying the \emph{Bestagon} gates.
   \item SAT-based equivalence checking~\cite{walter2020verification} confirms that the hexagonalized layout preserves the gate-level behavior.
   \item The \emph{Bestagon} library~\cite{walter2022hexagons} is applied to the verified layout, yielding a dot-accurate, manufacturable \gls{sidb} layout.
@@ -462,13 +462,13 @@ This work adopts $\chi$ as the objective for the technology mapper so that the f
 \subsubsection{Placement and Routing Improvements for SiDBs}\label{subsubsec:methodology-p-and-r-improvements-for-sidb}
 
 The placement-and-routing framework within \emph{fiction} was first established for \gls{qca} circuits on a Cartesian grid under a 2DDWave clocking scheme~\cite{walter2019fiction}. Subsequent support for \gls{sidb} logic was enabled through a coordinate mapping that involves a $45^\circ$ rotation of the Cartesian layout prior to its projection onto the hexagonal \gls{sidb} lattice~\cite{hofmann2023scalable}.
-This rotation, however, can lead to suboptimal results; a layout that is compact on the Cartesian grid may become significantly larger after hexagonalization because horizontal and vertical paths are transformed into longer diagonal routes. \TODO{Simon: The length of the paths actually stay the same (in tiles). The height of the hexagonal layout depends on the number of diagonals in the Cartesian layout, therefore more squarish layouts are better}
+This rotation, however, can lead to suboptimal results: a layout that is compact on the Cartesian grid may become significantly taller after hexagonalization because diagonal signal paths in the Cartesian layout map to vertical paths in the hexagonal layout, especially when input pins are strongly offset in the Cartesian layout. Layouts with a more balanced aspect ratio are therefore preferred.
 While the older \emph{ortho} algorithm offers no configuration to compensate for this, the more recent \gls{gold} algorithm~\cite{hofmann2024born} exposes a configurable cost objective for placement and routing, enabling optimizations more suitable for the final \gls{sidb} layout.
 Whereas the default cost objective for \gls{gold} is the area, this work introduces new cost objectives that encourage more square footprints and to reduce the aspect-ratio distortion introduced by the $45^\circ$ rotation during the hexagonalization step; they are detailed in \secref{sec:results-synthesis-metrics}.
 
 \subsubsection{Hexagonalization Improvements}
 
-The hexagonalization algorithm was also revised in this work to align generated layouts with \gls{sidb} clocking expectations. Under the Cartesian layout's 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional}, primary inputs are placed along the north and west borders and data advances diagonally toward the southeast. The $45^\circ$ rotation applied during hexagonalization left many inputs and outputs recessed from the north and south edges, respectively. These offsets reduce the attainable throughput because some signals must be held across multiple cycles for synchronization. The updated flow stretches all input and output pins to the north and south boundaries after projection, producing layouts whose ports are time-aligned as they enter and exit the hexagonal fabric. \TODO{Simon: Should we also include that we additionally offer the possibility to do that extensions without crossings as they're quite unstable and hard to fabricate?}
+The hexagonalization algorithm was also revised in this work to align generated layouts with \gls{sidb} clocking expectations. Under the Cartesian layout's 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional}, primary inputs are placed along the north and west borders and data advances diagonally toward the southeast. The $45^\circ$ rotation applied during hexagonalization left many inputs and outputs recessed from the north and south edges, respectively. These offsets reduce the attainable throughput because some signals must be held across multiple cycles for synchronization. The updated flow stretches all input and output pins to the north and south boundaries after projection, producing layouts whose ports are time-aligned as they enter and exit the hexagonal fabric. A configurable constraint can also be toggled to perform the pin extensions without wire crossings as they are typically less robust against environmental defects.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Experimental Results
@@ -476,7 +476,7 @@ The hexagonalization algorithm was also revised in this work to align generated 
 \section{Experimental Results}\label{sec:results}
 
 This section evaluates the \gls{rtl}-to-atoms flow using the synthesized \gls{pe}-core layouts.
-First, \secref{sec:results-experimental-protocol} outlines the experimental protocol, including the considered quantization settings and physical-design \TODO{Simon: Just to be sure, here you're using physical-design instead of physical design due to it followed by configurations?} configurations.
+First, \secref{sec:results-experimental-protocol} outlines the experimental protocol, including the considered quantization settings and physical design configurations.
 Then, \secref{sec:results-synthesis-metrics} presents the resulting synthesis metrics across technology-mapping and placement-and-routing variants.
 Finally, \secref{sec:results-discussion} discusses these findings in the context of prior manual estimations and the remaining opportunities for optimization.
 
@@ -629,7 +629,7 @@ Finally, \secref{sec:results-discussion} discusses these findings in the context
 
 \subsection{Experimental Protocol}\label{sec:results-experimental-protocol}
 
-This comparative study aims to showcase the scaling behavior of various bit-width configurations for activations and weights, as well as the synthesis results under various configurations for the technology mapper and placement-and-routing algorithms\todo{``various configurations'' used twice in the sentence, make more concise}.
+This comparative study characterizes how activation and weight bit widths scale and reports synthesis results across different technology-mapping and placement-and-routing settings.
 To this end, the combinational \gls{pe}-core (\secref{sec:methodology-verilog}) is synthesized for 2-, 4-, and 8-bit weights and activations, henceforth denoted W2A2, W4A4, and W8A8, respectively.
 These selections correspond to widely studied quantized regimes for CNNs and Transformers where the dominant operations reduce to matrix multiplications that map directly onto an \gls{mxu} \cite{esser2020learnedstepsizequantization, banner2019post, jouppi2017indatacenter}.
 
