@@ -350,6 +350,7 @@ Interfacing with \gls{cmos} can be achieved by biasing inputs electrostatically 
     \caption{
         A 2D systolic array \gls{mxu} receiving quantized activations ($a$), weights ($w$), weight control signals ($C_w$), and partial sums ($s$). \Glspl{pe} inside the \gls{mxu} consist of a \gls{mac} unit, memory controller, and delay-line memory for weight storage. Signals propagate downward on the left side of the \gls{pe} (forward pass) and upwards on the right side (return pass).
         % \TODO{Consistent font size \& weight for I/O pins.} \TODO{Improve color scheme.} \TODO{Rounded corners in the right.}
+        \TODO{Simon: Is the capitalization of w and c consistent? For example its C in the left figure and c in the right (also regarding the caption)}
     }
     \label{fig:mxu-systolic-array}
 \end{figure}
@@ -437,7 +438,7 @@ Because the \gls{pe} includes forward and return paths that form an internal fee
 To reconcile these constraints, this work adopts a hierarchical \gls{rtl} organization, separating the design into a combinational core and a clocked shell:
 %
 \begin{description}
-  \item[Combinational core:] The \gls{pe}'s forward-pass logic is implemented in strictly combinational \gls{rtl}, as shown in Alg.~\ref{alg:pe-forward}, ensuring compatibility with subsequent synthesis steps.
+  \item[Combinational core:] The \gls{pe}'s forward-pass logic is implemented in strictly combinational \gls{rtl}, as shown in Alg.~\ref{alg:pe-forward},\TODO{Simon: shown in Algorithm instead of Alg.?} ensuring compatibility with subsequent synthesis steps.
   \item[Clocked shell:] A higher-level \gls{rtl} module captures the clocked operation of the full \gls{pe}, defining the component's input and output signals, pipelined internal signal steering, and synchronized signal timing for the return pass.
 \end{description}
 %
@@ -460,12 +461,12 @@ The gate-level netlist is then passed to the \emph{fiction} framework~\cite{walt
 
 \subsubsection{\textit{fiction} Synthesis Flow}
 
-The verified gate-level netlist is subsequently forwarded to \emph{fiction}~\cite{walter2019fiction}, whose \gls{fcn}-aware toolchain synthesizes it into an \gls{sidb} layout following the synthesis flow proposed by \cite{walter2022hexagons}:
+The verified gate-level netlist is subsequently forwarded to \emph{fiction}~\cite{walter2019fiction} \TODO{Simon: I don't think we have to cite fiction that often}, whose \gls{fcn}-aware toolchain synthesizes it into an \gls{sidb} layout following the synthesis flow proposed by \cite{walter2022hexagons}:
 %
 \begin{enumerate}
   \item Technology mapping maps the \gls{aig} onto the \emph{Bestagon} gate library~\cite{walter2022hexagons}, exploiting the library's richer primitives to shrink the logic compared with an AND/INV-only basis.
-  \item Placement and routing with the \textit{ortho}~\cite{walter2019scalable} or \gls{gold}~\cite{hofmann2024born} algorithm produces a layout on a Cartesian grid.
-  \item \Gls{plo}~\cite{hofmann2023postlayout, hofmann2024late} reduces the footprint of the routed design.
+  \item Placement and routing with the \textit{ortho}~\cite{walter2019scalable} or \gls{gold}~\cite{hofmann2024born} \TODO{Simon: If we have enough space, there are two more papers about gold: https://ieeexplore.ieee.org/document/10966234 and https://ieeexplore.ieee.org/document/11197132} algorithm produces a layout on a Cartesian grid.
+  \item \Gls{plo}~\cite{hofmann2023postlayout, hofmann2024late} reduces the footprint of the routed design. \TODO{Simon: Post-layout optimization instead of Post-layout Optimization? Can we also cite the TCAD Journal version? https://ieeexplore.ieee.org/document/10916761}
   \item The Cartesian layout is projected onto a hexagonal grid~\cite{hofmann2023scalable} in preparation for applying the \emph{Bestagon} gates.
   \item SAT-based equivalence checking~\cite{walter2020verification} confirms that the hexagonalized layout preserves the gate-level behavior.
   \item The \emph{Bestagon} library~\cite{walter2022hexagons} is applied to the verified layout, yielding a dot-accurate, manufacturable \gls{sidb} layout.
@@ -482,13 +483,13 @@ This work adopts $\chi$ as the objective for the technology mapper so that the f
 \subsubsection{Placement and Routing Improvements for SiDBs}\label{subsubsec:methodology-p-and-r-improvements-for-sidb}
 
 The placement-and-routing framework within \emph{fiction} was first established for \gls{qca} circuits on a Cartesian grid under a 2DDWave clocking scheme~\cite{walter2019fiction}. Subsequent support for \gls{sidb} logic was enabled through a coordinate mapping that involves a $45^\circ$ rotation of the Cartesian layout prior to its projection onto the hexagonal \gls{sidb} lattice~\cite{hofmann2023scalable}.
-This rotation, however, can lead to suboptimal results; a layout that is compact on the Cartesian grid may become significantly larger after hexagonalization because horizontal and vertical paths are transformed into longer diagonal routes.
+This rotation, however, can lead to suboptimal results; a layout that is compact on the Cartesian grid may become significantly larger after hexagonalization because horizontal and vertical paths are transformed into longer diagonal routes. \TODO{Simon: The length of the paths actually stay the same (in tiles). The height of the hexagonal layout depends on the number of diagonals in the Cartesian layout, therefore more squarish layouts are better}
 While the older \emph{ortho} algorithm offers no configuration to compensate for this, the more recent \gls{gold} algorithm~\cite{hofmann2024born} exposes a configurable cost objective for placement and routing, enabling optimizations more suitable for the final \gls{sidb} layout.
 Whereas the default cost objective for \gls{gold} is the area, this work introduces new cost objectives that encourage more square footprints and to reduce the aspect-ratio distortion introduced by the $45^\circ$ rotation during the hexagonalization step; they are detailed in \secref{sec:results-synthesis-metrics}.
 
 \subsubsection{Hexagonalization Improvements}
 
-The hexagonalization algorithm was also revised in this work to align generated layouts with \gls{sidb} clocking expectations. Under the Cartesian layout's 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional}, primary inputs are placed along the north and west borders and data advances diagonally toward the southeast. The $45^\circ$ rotation applied during hexagonalization left many inputs and outputs recessed from the north and south edges, respectively. These offsets reduce the attainable throughput because some signals must be held across multiple cycles for synchronization. The updated flow stretches all input and output pins to the north and south boundaries after projection, producing layouts whose ports are time-aligned as they enter and exit the hexagonal fabric.
+The hexagonalization algorithm was also revised in this work to align generated layouts with \gls{sidb} clocking expectations. Under the Cartesian layout's 2DDWave clocking scheme~\cite{vankamamidi2008twodimensional}, primary inputs are placed along the north and west borders and data advances diagonally toward the southeast. The $45^\circ$ rotation applied during hexagonalization left many inputs and outputs recessed from the north and south edges, respectively. These offsets reduce the attainable throughput because some signals must be held across multiple cycles for synchronization. The updated flow stretches all input and output pins to the north and south boundaries after projection, producing layouts whose ports are time-aligned as they enter and exit the hexagonal fabric. \TODO{Simon: Should we also include that we additionally offer the possibility to do that extensions without crossings as they're quite unstable and hard to fabricate?}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Experimental Results
@@ -496,7 +497,7 @@ The hexagonalization algorithm was also revised in this work to align generated 
 \section{Experimental Results}\label{sec:results}
 
 This section evaluates the \gls{rtl}-to-atoms flow using the synthesized \gls{pe}-core layouts.
-First, \secref{sec:results-experimental-protocol} outlines the experimental protocol, including the considered quantization settings and physical-design configurations.
+First, \secref{sec:results-experimental-protocol} outlines the experimental protocol, including the considered quantization settings and physical-design \TODO{Simon: Just to be sure, here you're using physical-design instead of physical design due to it followed by configurations?} configurations.
 Then, \secref{sec:results-synthesis-metrics} presents the resulting synthesis metrics across technology-mapping and placement-and-routing variants.
 Finally, \secref{sec:results-discussion} discusses these findings in the context of prior manual estimations and the remaining opportunities for optimization.
 
@@ -544,6 +545,8 @@ Finally, \secref{sec:results-discussion} discusses these findings in the context
       \footnotesize
       \vspace{0.5em}
       Here $w$, $h$, and $A$ denote the tile counts along width, height, and footprint ($A = w \times h$); ``uniform TM'' and ``\gls{fom}-aware TM'' denote the Bestagon variant used for technology mapping; ``vs $A_\text{uni}$'' reports the percentage change imposed by \gls{fom}-aware technology mapping. ``Default'' and ``optimized'' \glspl{alu} indicate whether adder/multiplier selection was left to \emph{Yosys}'s defaults or specifically defined. %\TODO{Do a final check with sweep data to make sure the reported minimums accurately reflect latest results.}
+      \TODO{Simon: Do we really need the "vs $A_{uni}$" column? I think we could also squeeze the table into one column without it then.}
+      \TODO{Simon: Should we also mention here that PLO was used together with each algorithm?}
     \end{minipage}
   \end{minipage}
 \end{table*}
@@ -624,7 +627,7 @@ Despite this estimation gap, the \gls{pe}-core captures the computational portio
 Using the tile dimensions in \tref{tab:pe-results-extended}, the physical dimensions can be computed by $w \times \SI{23.06}{\nano\meter}$ and $h \times \SI{13.06}{\nano\meter}$.\footnote{These scaling factors differ from~\cite{ng2025building} due to corrected calculation factors employed in this work.}
 Relative to the manually estimated dimensions of $5000 \times \SI{8150}{\nano\meter^2}$~\cite{ng2023blueprint}, the synthesized layout using optimized \glspl{alu} represent a $3.4\times$ increase in area use; the gap would further widen if the entire \gls{pe} was synthesized.
 
-Several factors contribute to this discrepancy. Whereas the manual estimation used hand-designed components with relatively high logic gate density~\cite{ng2023blueprint}, this work employs the \emph{Bestagon} gate library, whose larger tile template deliberately ensures sufficient separation between the logic canvases of neighboring tiles to minimize inter-gate interference~\cite{walter2022hexagons}. In addition, while the manual estimation directly employed optimized \gls{alu} layouts, this work can only influence \gls{alu} selection at the \gls{rtl}-to-netlist synthesis stage via \emph{Yosys}; after ABC's netlist optimization, the boundaries of arithmetic elements become blurred, limiting the effectiveness of optimization algorithms that could exploit arithmetic structure. Finally, the large W8A8 netlist is computationally intractable for \gls{gold} to place and route, preventing the $\approx40\text{--}50\,\%$ area reductions observed for smaller configurations from being realized at this bit-width. Nevertheless, the successful end-to-end design flow achieved in this work demonstrates what state-of-the-art \gls{fcn} \gls{eda} tools can realize on the \gls{sidb} platform, combining manufacturable layouts with full testbench-based verification and highlighting opportunities for further optimization.
+Several factors contribute to this discrepancy. Whereas the manual estimation used hand-designed components with relatively high logic gate density~\cite{ng2023blueprint}, this work employs the \emph{Bestagon} gate library, whose larger tile template deliberately ensures sufficient separation between the logic canvases of neighboring tiles to minimize inter-gate interference~\cite{walter2022hexagons}. In addition, while the manual estimation directly employed optimized \gls{alu} layouts, this work can only influence \gls{alu} selection at the \gls{rtl}-to-netlist synthesis stage via \emph{Yosys}; after ABC's netlist optimization, the boundaries of arithmetic elements become blurred, limiting the effectiveness of optimization algorithms that could exploit arithmetic structure. Finally, the large W8A8 netlist is computationally intractable for \gls{gold} to place and route, preventing the $\approx40\text{--}50\,\%$ area reductions observed for smaller configurations from being realized at this bit-width. \TODO{Simon: In the future work section, we can then also mention improving gold to scale to W8A8 and further closing that gap} Nevertheless, the successful end-to-end design flow achieved in this work demonstrates what state-of-the-art \gls{fcn} \gls{eda} tools can realize on the \gls{sidb} platform, combining manufacturable layouts with full testbench-based verification and highlighting opportunities for further optimization.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Future Work
@@ -636,7 +639,7 @@ Our hierarchical Verilog structure facilitates the synthesis of combinational co
 
 \OLD{One limitation faced by this study is the lack of control over the implementation of fundamental arithmetic units such as adders and multipliers. Since the design trade-offs of \gls{sidb} logic differ significantly from CMOS designs, it is possible that our workflow for synthesizing \gls{rtl} Verilog to gate-level Verilog using established tools like Yosys and ABC is introducing unnecessary overhead due suboptimal implementation choices. Further improvements to this synthesis step, as well as further developments to \emph{fiction}'s placement and routing algorithms, can bridge the gap between synthesized layouts and expert-designs and incentivize further development of novel applications optimized for \glspl{sidb}.}
 
-
+\TODO{Simon: I removed my middle name from reference 37+38 to make it consistent}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Bibliography
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
