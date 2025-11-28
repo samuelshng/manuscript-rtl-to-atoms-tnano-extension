@@ -1,4 +1,4 @@
-\documentclass[journal]{IEEEtran} 
+\documentclass[lettersize,journal]{IEEEtran} 
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 \usepackage{multirow}%,bigdelim}
@@ -21,6 +21,7 @@
 \usepackage{siunitx}
 \usepackage{xspace}
 \usepackage[utf8]{inputenc}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
 
 % \usepackage{tablefootnote}
 \usepackage[export]{adjustbox}
@@ -269,7 +270,7 @@ This represents a significant milestone in \gls{sidb} logic design, bringing pre
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction} \label{sec:intro}
 
-As \gls{cmos} scaling plateaus and \gls{ai} adoption accelerates, the resulting growth in global computing energy demand is driving strong interest in far more energy-efficient hardware and emerging computing technologies. Among these, \gls{fcn} has emerged as an appealing post-\gls{cmos} computing paradigm, in which local field interactions encode logic states in the position of charges~\cite{lent2003molecular,ardesi2024modeling} or in the magnetic polarity of nanomagnets~\cite{bernstein2005magnetic,giri2016modeling}, enabling both computation and signal transmission.
+\IEEEPARstart{A}{s} \gls{cmos} scaling plateaus and \gls{ai} adoption accelerates, the resulting growth in global computing energy demand is driving strong interest in far more energy-efficient hardware and emerging computing technologies. Among these, \gls{fcn} has emerged as an appealing post-\gls{cmos} computing paradigm, in which local field interactions encode logic states in the position of charges~\cite{lent2003molecular,ardesi2024modeling} or in the magnetic polarity of nanomagnets~\cite{bernstein2005magnetic,giri2016modeling}, enabling both computation and signal transmission.
 
 Among the various physical implementations of \gls{fcn}, quantum dots made of \glspl{sidb} stand out as a promising platform due to their atomically precise fabrication~\cite{huff2017atomic, achal2018lithography, pitters2024atomically} and discretely controllable charge states~\cite{haider2009controlled, pitters2011charge}.
 Motivated by the experimental demonstration of an \gls{sidb} \textsc{or} gate measuring just $\SI{5}{\nano\meter}\times\SI{6}{\nano\meter}$~\cite{huff2018binary}, specialized \gls{cad} tools and \gls{eda} frameworks have emerged to support \gls{sidb} logic exploration.
@@ -401,12 +402,12 @@ Subsequently, \secref{sec:methodology-rtl-to-netlist} covers the \gls{rtl}-to-ne
 To achieve this work's objectives, the \gls{rtl} implementation must satisfy the following requirements:
 %
 \begin{enumerate*}
-  \item the \gls{rtl} implementation must obey \emph{fiction}'s requirement for gate-level netlists to be purely combinational; and
+  \item the \gls{rtl} must be purely combinational for \emph{fiction} compatibility; and
   \item operation of the pipelined \gls{pe} must be verifiable so that test benches can establish operational correctness, addressing the lack of formal verification in prior work~\cite{ng2023blueprint}.
 \end{enumerate*}
 %
-Because the \gls{pe} includes forward and return paths that form an internal feedback loop, a direct \gls{rtl} implementation of the full \gls{pe} would conflict with \emph{fiction}'s requirement for purely combinational gate-level netlists.
-To reconcile these constraints, this work adopts a hierarchical \gls{rtl} organization which compartmentalizes the design:
+Because the \gls{pe} includes forward and return paths that form an internal feedback loop, a direct \gls{rtl} implementation of the full \gls{pe} would be incompatible with \emph{fiction}.
+In reconciliation, this work adopts a hierarchical \gls{rtl} organization which compartmentalizes the design:
 %
 \begin{description}
   \item[Combinational core:] The \gls{pe}'s forward-pass logic is implemented in strictly combinational \gls{rtl}, as shown in Alg.~\ref{alg:pe-forward}, ensuring compatibility with subsequent synthesis steps.
@@ -422,8 +423,8 @@ In particular, interleaved inputs for concurrent \gls{mac} operation across all 
 
 
 With the \gls{rtl} design verified, the first stage of the synthesis flow is to generate a gate-level netlist. To accomplish this, this work uses \emph{Yosys}~\cite{wolf2013yosys} to map arithmetic operators such as \mbox{accumulation (\texttt{+})} and \mbox{multiplication (\texttt{*})} into gate-level \glspl{alu}.
-Absent explicit directives, \emph{Yosys} selects \gls{cmos}-optimized \gls{alu} implementations, which can underperform in \gls{fcn} because their strictly planar fabrics force gates and wires to share the same plane, altering the area and latency trade-offs \cite{kim2010multipliers}. To ensure technology-appropriate choices, this work supplies explicit gate-level descriptions of a ripple-carry adder and an array multiplier to the \emph{Yosys} technology mapper. These implementations have been shown to suit \gls{fcn} technologies thanks to their regular structure, which eases wiring congestion and limits the need for crossovers \cite{kim2010multipliers}.
-The mapped netlist is then rewritten as an \gls{aig} with \emph{Yosys} and optimized with ABC's \textit{\&deepsyn}~\cite{brayton2010abc} strategy to reduce the network's node count.
+Absent explicit directives, \emph{Yosys} selects \gls{cmos}-optimized \glspl{alu}, which can underperform in \gls{fcn}'s strictly planar fabrics which force gates and wires to share the same plane, altering the area and latency trade-offs \cite{kim2010multipliers}. To ensure technology-appropriate choices, this work supplies explicit gate-level descriptions of a ripple-carry adder and an array multiplier to \emph{Yosys}, both of which have been shown to suit \gls{fcn} technologies thanks to their regular structure, which eases wiring congestion and reduces wire crossings \cite{kim2010multipliers}.
+The mapped netlist is then rewritten as an \gls{aig} and optimized with ABC's \textit{\&deepsyn}~\cite{brayton2010abc} strategy to reduce the network's node count.
 Finally, the resulting gate-level netlist is validated against the \gls{pe}-core test benches to confirm functional correctness.
 
 \subsection{Netlist-to-Atoms}\label{sec:methodology-netlist-to-atoms}
@@ -443,7 +444,7 @@ The verified gate-level netlist is subsequently forwarded to \emph{fiction}, who
   \item The \emph{Bestagon} library~\cite{walter2022hexagons} is applied to the verified layout, yielding a dot-accurate, manufacturable \gls{sidb} layout.
 \end{enumerate}
 %
-While this established workflow provides a robust foundation, its application to the \gls{sidb} platform revealed opportunities for technology-specific enhancements, which are detailed below and further examined in \secref{sec:results}.
+While this established workflow provides a robust foundation, its application to the \gls{sidb} platform revealed opportunities for technology-specific enhancements as detailed below.
 
 \subsubsection{FoM-aware Technology Mapping}
 
@@ -606,6 +607,10 @@ The findings also reveal several avenues for future work to bridge remaining gap
 Preservation of frequently used arithmetic structures across the synthesis stages will allow optimized \gls{alu} layouts to be directly applied in the physical layout stage.
 On physical design, improving the scalability and robustness of \gls{gold} and \gls{plo} to handle larger scale netlists could allow the demonstrated footprint advantages to carry over to W8A8-scale layouts and larger accelerators.
 Finally, automating full \gls{pe}- and \gls{mxu}-level synthesis---including routing of the return path and of the \gls{pe}-core's pins to the outer \gls{pe} module---will enable application-scale studies that jointly consider device reliability, clocking constraints, and workload characteristics. Taken together, the successful demonstration of an end-to-end \gls{rtl}-to-atoms flow for a quantized \gls{sidb}-based \gls{mxu} \gls{pe} provides a concrete methodological foundation for these avenues and serves as the blueprint for future scalable accelerator studies on \glspl{sidb}.
+
+\section*{Content Generated by AI}
+
+OpenAI LLMs were used for limited assistance in writing for clarity and in coding. All outputs were reviewed and verified by the authors, who assume full responsibility for the content.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Bibliography
