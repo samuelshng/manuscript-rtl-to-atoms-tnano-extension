@@ -1,0 +1,135 @@
+\documentclass[11pt]{letter}
+
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{caption}
+\DeclareCaptionType{coverlettable}[Table][List of Tables]
+\newenvironment{tableitemize}{%
+  \begingroup
+  \setlength{\parskip}{0pt}%
+  \vspace{-0.55\baselineskip}%
+  \begin{itemize}[leftmargin=*,nosep,topsep=0pt,partopsep=0pt]%
+  \setlength{\itemsep}{0pt}%
+}{%
+  \end{itemize}%
+  \endgroup
+}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{makecell}
+
+% To-do items (kept identical to conference_101719.tex)
+\newcommand{\TODO}[1]{\textcolor{red}{TODO: #1}}
+
+\indentedwidth=50em
+
+\signature{Samuel~S.~H.~Ng\\
+Ph.D.~Candidate\\
+Department of Electrical and Computer Engineering\\
+University of British Columbia\\
+Vancouver, BC, Canada\\
+\href{mailto:samueln@ece.ubc.ca}{samueln@ece.ubc.ca}}
+
+
+\begin{document}
+
+\date{November 30, 2025}
+
+\begin{letter}{Professor Sorin Cotofana, Editor-in-Chief\\
+IEEE Transactions on Nanotechnology (TNANO)\\
+\TODO{Postal address}\\[0.5em]
+Dr.~Francesca Urban, Dr.~Aniello Pelella, and\\
+Dr.~Antonio Di Bartolomeo, Guest Editors\\
+TNANO Special Section on the 25th IEEE International Conference on Nanotechnology}
+
+\opening{Dear Professor Cotofana and Guest Editors,}
+
+This letter accompanies the manuscript entitled ``RTL-to-Atoms Synthesis of a Machine Learning Accelerator on Atomic-Scale Computers'', which is submitted for consideration as a Regular Manuscript in IEEE Transactions on Nanotechnology (TNANO) for the Special Section on the ``25th IEEE International Conference on Nanotechnology (IEEE NANO 2025)''. The work lies primarily in the area of Computational Nanotechnology (Area~11), with strong connections to Circuits and Architectures (Area~2), and aligns with the NANO~2025 scope on ``Quantum, Neuromorphic, and Unconventional Computing''.
+
+The manuscript presents an end-to-end synthesis framework that maps a quantized matrix-multiply processing element for machine learning acceleration from register-transfer level (RTL) descriptions down to dot-accurate silicon dangling bond (SiDB) layouts suitable for fabrication. By combining a hierarchical, parameterized RTL architecture with SiDB-aware logic synthesis and physical design, the study demonstrates how design decisions at the architecture, arithmetic, and layout levels jointly influence area, robustness, and scalability in atomic-scale computing platforms, thereby contributing to TNANO's focus on nanoscale devices, circuits, and systems.
+
+This manuscript is a substantially extended journal version of the IEEE NANO~2025 conference paper ``Building a Machine Learning Accelerator with Silicon Dangling Bonds: From Verilog to Quantum Dot Layout''. The conference paper is properly cited in the manuscript. In accordance with TNANO and IEEE policies on extended versions and duplicated publications, the journal submission includes substantial new technical material relative to the conference version. In particular, the manuscript:
+%
+\begin{enumerate}
+    \item Generalizes the RTL design to support multiple weight and activation bit-widths, enabling a systematic study of precision scaling in the downstream synthesis flow.
+    \item Introduces technology-appropriate arithmetic units into the RTL-to-netlist step to better suit planar field-coupled fabrics and reduce logic footprint.
+    \item Incorporates figure-of-merit-aware technology mapping that prioritizes SiDB gates with higher predicted robustness based on device-level metrics.
+    \item Refines placement-and-routing algorithms by implementing SiDB-oriented cost objectives that improve layout footprint.
+    \item Revises the hexagonalization and input/output pin treatment to better align synthesized layouts with SiDB clocking constraints and throughput considerations.
+\end{enumerate}
+%
+These additions transform the earlier proof-of-concept flow into a configurable and quantitatively characterized framework that can serve as a reproducible benchmark for atomic-scale computer-aided design.
+
+The following table clearly encapsulates the contributions made in the prior conference paper and how this journal extension contributes material additions:
+%
+{\setlength{\parskip}{0pt}%
+\begin{center}
+    \captionsetup{type=coverlettable}
+    \small
+    \caption{Summary of conference and journal contributions.}
+    \label{tab:cover-letter-contribution-matrix}
+    {\renewcommand{\arraystretch}{1.15}%
+    \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.18\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+        \toprule
+        \textbf{Topic} & \textbf{Conference contributions} & \textbf{New contributions for journal extension} \\
+        \midrule
+        RTL design of MXU &
+        \begin{tableitemize}
+            \item Hierarchical RTL for the matrix-multiply unit with a processing-element core and clocked shell.
+            \item Each layer in the hierarchy verified with dedicated test benches.
+            \item Fixed weight and activation precision at W8A8.
+        \end{tableitemize} &
+        \begin{tableitemize}
+            \item Parameterizable weight and activation bit-widths that enable scaling studies and benchmarking of state-of-the-art placement-and-routing algorithms when 8-bit layouts become intractable.
+        \end{tableitemize} \\
+        \midrule
+        RTL-to-netlist &
+        \begin{tableitemize}
+            \item Used \emph{Yosys} for RTL-to-AIG conversion with its default ALU mapping geared toward CMOS libraries.
+            \item Optimized the AIG using ABC's \emph{\&deepsyn} strategy.
+        \end{tableitemize} &
+        \begin{tableitemize}
+            \item Implemented SiDB-aligned ripple-carry adders and array multipliers as gate-level netlists and integrated them into \emph{Yosys} for technology-aware mapping.
+        \end{tableitemize} \\
+        \midrule
+        Netlist-to-atoms &
+        \begin{tableitemize}
+            \item Applied figure-of-merit-aware technology mapping that favored robust SiDB gates despite the area overhead.
+            \item Extended the hexagonalization flow to align input and output pins with the fabric clocking scheme.
+        \end{tableitemize} &
+        \begin{tableitemize}
+            \item Added SiDB-specific cost objectives to the \emph{gold} placement-and-routing algorithm so that optimization targets the layout rules of SiDB fabrics rather than metrics tuned for other FCN platforms.
+        \end{tableitemize} \\
+        \midrule
+        Experiment &
+        \begin{tableitemize}
+            \item Compared synthesized MXU layouts against manually estimated blueprints from prior studies.
+            \item Evaluated uniform versus figure-of-merit-aware synthesis for the W8A8 configuration using the \emph{ortho} placement-and-routing algorithm.
+        \end{tableitemize} &
+        \begin{tableitemize}
+            \item Compared synthesis results across W8A8, W4A4, and W2A2.
+            \item Evaluated all bit-width configurations with figure-of-merit-aware technology mapping.
+            \item Reported \emph{gold} placement-and-routing results for W4A4 and W2A2, which remain within \emph{gold}'s tractable range.
+            \item Benchmarked new \emph{gold} cost objectives to quantify SiDB-specific layout improvements.
+        \end{tableitemize} \\
+        \bottomrule
+    \end{tabularx}}
+\end{center}}
+
+The authors confirm that this submission represents original work that has not been published previously and is not under consideration for publication elsewhere. All co-authors have approved the manuscript and its submission to IEEE Transactions on Nanotechnology. The author order has been adjusted to reflect additional contributions to the extended study. Any reuse of figures or material from the conference version is appropriately cited and adapted.
+
+% \TODO{Optionally, provide here any additional information requested by the TNANO submission system, such as suggested Associate Editor and potential reviewers (with institutional affiliations and contact information), statements about potential conflicts of interest, funding acknowledgments if specifically requested for the cover letter, or prior TNANO manuscript numbers if this work has a related submission history.}
+
+Thank you very much for considering this manuscript for publication in the IEEE Transactions on Nanotechnology Special Section on the ``25th IEEE International Conference on Nanotechnology (IEEE NANO 2025)''. The authors appreciate the time and effort of the Editors and reviewers in evaluating this work.
+
+{\setlength{\indentedwidth}{\textwidth}\closing{Sincerely,}}
+
+\end{letter}
+
+\end{document}
