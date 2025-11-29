@@ -250,11 +250,11 @@
 \begin{abstract}
 %
 As \gls{cmos} scaling slows and \gls{ai} demand soars, atomic-scale platforms such as quantum-dot logic based on \glspl{sidb} offer a promising path toward energy-efficient computation, yet practical design flows from \gls{rtl} specifications to manufacturable layouts remain limited.
-This work presents an \gls{rtl}-to-atoms synthesis framework for a quantized \glsentrylong{mxu} targeting \gls{sidb}-based \glsentrylong{fcn}.
+This work presents an \gls{rtl}-to-atoms synthesis framework for a quantized \glsentrylong{mxu} targeting \gls{sidb}-based \gls{fcn}.
 Building on recent advances in \gls{sidb}-aware \gls{eda}, the framework combines a hierarchical, parameterized \gls{rtl} architecture with platform-optimized \glsentrylongpl{alu}, reducing the synthesized logic core of processing elements by about $\bm{15\,\%}$ compared to prior flows.
-Key improvements were also made to the synthesis workflow to optimize each step for \gls{sidb} logic\todo{What was it optimized to before? Might not be clear to a reviewer}, which together ensure that the synthesized layout achieves favorable area scaling and maximum throughput, while balancing operational robustness by incorporating figure-of-merit awareness in the technology mapping step.
-Evaluations across multiple weight-and-activation bit-widths show substantial footprint reductions for configurations within the practical range of latest placement-and-routing algorithms while preserving testbench-validated functional correctness from \gls{rtl} to dot-accurate \gls{sidb} layouts, thereby establishing a reproducible benchmark for atomic-scale \glsentrylong{cad}.
-This represents a significant milestone in \gls{sidb} logic design, bringing previously manually-intensive workflows with scalable, automated methodologies, thus providing a valuable founcation for future optimization and widespread adoption of \gls{sidb}-based computing architectures.
+Key improvements were also made to the synthesis workflow, retargeting tools previously tuned for other \gls{fcn} technologies\todo{Sam to Marcel: do you think this is clearer? Original comment was ``what was it optimized to before?''} toward \gls{sidb} logic and incorporating figure-of-merit awareness, which together ensure that the synthesized layouts achieve favorable area scaling and maximum throughput while balancing operational robustness.
+Evaluations across multiple quantization bit-widths show substantial footprint reductions for configurations within the practical range of latest placement-and-routing algorithms while preserving testbench-validated functional correctness from \gls{rtl} to dot-accurate \gls{sidb} layouts, thereby establishing a reproducible benchmark for \gls{eda} on atomic-scale computing.
+This represents a significant milestone, bridging previously manually-intensive workflows with scalable, automated methodologies, thus providing a valuable foundation for future design and optimization of \gls{sidb}-based accelerators.
 %
 \end{abstract}
 
@@ -274,18 +274,18 @@ This represents a significant milestone in \gls{sidb} logic design, bringing pre
 \IEEEPARstart{G}{lobal} computing infrastructure increasingly devotes its resources to \gls{ai} inference and training, making the associated energy demand a central constraint and spurring efforts to develop hardware platforms that operate far more efficiently than traditional \gls{cmos} processors.
 Among these, \gls{fcn} has emerged as an appealing post-\gls{cmos} computing paradigm, in which local field interactions encode logic states in the position of charges~\cite{lent2003molecular} or in the magnetic polarity of nanomagnets~\cite{bernstein2005magnetic,giri2016modeling}, enabling both computation and signal transmission.
 
-Among the various physical implementations of \gls{fcn}, quantum dots made of \glspl{sidb} stand out as a promising platform due to their atomically precise fabrication~\cite{huff2017atomic, achal2018lithography, pitters2024atomically} and discretely controllable charge states~\cite{haider2009controlled, pitters2011charge}.
+Among the various physical implementations of \gls{fcn}, quantum dots made of \glspl{sidb} stand out as a promising platform due to their atomically precise fabrication~\cite{achal2018lithography, pitters2024atomically} and discretely controllable charge states~\cite{haider2009controlled, pitters2011charge}.
 Motivated by the experimental demonstration of an \gls{sidb} \textsc{or} gate measuring just $\SI{5}{\nano\meter}\times\SI{6}{\nano\meter}$~\cite{huff2018binary}, specialized \gls{cad} tools and \gls{eda} frameworks have emerged to support \gls{sidb} logic exploration.
 At the physical design level, \emph{SiQAD}~\cite{ng2020siqad} and an ecosystem of simulators~\cite{chiu2020poissolver,drewniok2024need,lambooy2026clustercomplete} have enabled the exploration of logic structures and design rules at the gate and circuit levels~\cite{vieira2022threeinput,ruella2025comprehensive}.
 However, the fully manual design of these layouts remained a time-consuming process, motivating the automation of multiple stages of the design flow. At the quantum-dot level, automated \gls{sidb} gate designers~\cite{drewniok2025quickcell} enabled the creation of standard-tile libraries~\cite{walter2022hexagons}. With the addition of \gls{sidb} support in \emph{fiction}~\cite{walter2019fiction}, an \gls{eda} framework specialized for \gls{fcn}, new pathways have been opened for large-scale designs by synthesizing gate-level netlists down to dot-accurate \gls{sidb} layouts.
 
-Prior to the maturity of \gls{sidb} \gls{eda} tools, application-scale research targeting \glspl{sidb} was scarce and relied on manually verified \gls{sidb} building blocks, which were then extrapolated into system-level designs to estimate their behavior and implementation costs \cite{chiu2020poissolver, ng2023blueprint}. Among them was a quantized \gls{mxu} inspired by Google's \gls{tpu}~\cite{jouppi2017indatacenter} and optimized for \gls{sidb}'s architectural constraints~\cite{ng2023blueprint}, where the designer used simulation-proven \gls{sidb} logic components to approximate the area cost and performance figures.
-To facilitate practical implementation, an earlier conference version of this work was presented in \cite{ng2025building}, which utilized the \gls{mxu} as a \gls{rtl} Verilog design, employing clocked registers as an abstract proxy for the underlying \gls{fcn} clocking behavior. With a workflow spanning multiple \gls{eda} frameworks, that study automatically synthesized the \gls{rtl} implementation into dot-accurate \gls{sidb} layouts, realizing an automated, scalable, and verifiable end-to-end \gls{sidb} design flow from \gls{rtl} descriptions through logic synthesis and optimization down to manufacturable quantum-dot layouts and establishing a first practical benchmark for \gls{sidb} application design and validation.
+Prior to the maturity of \gls{sidb} \gls{eda} tools, application-scale research targeting \glspl{sidb} was scarce and relied on manually verified \gls{sidb} building blocks, which were then extrapolated into system-level designs to estimate their behavior and implementation costs \cite{chiu2020poissolver, ng2023blueprint}. Among them was a quantized \gls{mxu} inspired by Google's \gls{tpu}~\cite{jouppi2017indatacenter} and optimized for \gls{sidb}'s architectural constraints~\cite{ng2023blueprint}, where simulation-proven \gls{sidb} logic components were used to approximate the area cost and performance figures.
+To facilitate practical exploration, an earlier conference version of this work~\cite{ng2025building} implemented the \gls{mxu} as a \gls{rtl} Verilog design, employing clocked registers as an abstract proxy for the underlying \gls{fcn} clocking behavior. With a workflow spanning multiple \gls{eda} frameworks, the study synthesized the \gls{rtl} implementation into dot-accurate \gls{sidb} layouts, realizing an automated, scalable, and verifiable end-to-end \gls{sidb} design flow using state-of-the-art \gls{eda} tools.
 
-Despite this progress, the conference version of the \gls{rtl}-to-atoms flow in~\cite{ng2025building} left several aspects only coarsely explored: the choice of arithmetic units was left to logic synthesis frameworks, which do not take \gls{fcn}'s unique architectural preferences into account. Weights and activations were fixed to a single 8-bit configuration, preventing systematic study of how the synthesized layouts scale with precision.
-This work therefore provides a substantial extension upon the original methodology at multiple layers: at the \gls{mxu} \gls{rtl} design layer, generalization of quantization settings enabled a systematic study of downstream trade-offs in the synthesis pipeline; for \gls{rtl}-to-netlist synthesis, the introduction of technology-appropriate \glspl{alu} reduced synthesized area costs; and for netlist-to-atoms synthesis, multiple \gls{sidb}-oriented refinements to technology mapping, placement-and-routing, and hexagonalization further had a significant impact on quality of result.
+Despite this progress, the conference version of the \gls{rtl}-to-atoms flow in~\cite{ng2025building} left several aspects only coarsely explored: the choice of \glspl{alu} was left to logic synthesis frameworks, which do not take \gls{fcn}'s unique architectural preferences into account. Weights and activations were fixed to a single 8-bit configuration, preventing systematic study of how the synthesized layouts scale with precision.
+This work therefore provides a substantial extension upon the original methodology at multiple layers: at the \gls{rtl} design layer, parameterized quantization enabled a systematic study of downstream trade-offs in the synthesis pipeline; for \gls{rtl}-to-netlist synthesis, the introduction of technology-appropriate \glspl{alu} reduced the resulting area; and for netlist-to-atoms synthesis, multiple \gls{sidb}-oriented refinements to technology mapping, placement-and-routing, and hexagonalization further had a significant impact on the quality of result.
 These contributions transform a one-off demonstration into a concrete framework optimized for \gls{sidb} logic synthesis, revealing how architectural and layout decisions shape the strengths and limitations of current tools.
-The remainder of this manuscript is structured as follows: \secref{sec:background} reviews \gls{sidb} device operation and \gls{eda} infrastructure; \secref{sec:related-work} summarizes prior \gls{sidb} \gls{mxu} designs; \secref{sec:methodology} details the hierarchical \gls{rtl} architecture and the \gls{rtl}-to-atoms synthesis flow; \secref{sec:results} presents the experimentation protocol and synthesis results; and \secref{sec:conclusion-future-work} concludes with directions for future work.
+The remainder of this manuscript is structured as follows: \secref{sec:background} reviews \gls{sidb} logic background and \gls{eda} infrastructure; \secref{sec:related-work} summarizes prior \gls{sidb} \gls{mxu} designs; \secref{sec:methodology} details the hierarchical \gls{rtl} architecture and the \gls{rtl}-to-atoms synthesis flow; \secref{sec:results} presents the synthesis results and discuss their trade-offs; and \secref{sec:conclusion-future-work} concludes with directions for future work.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Background
@@ -303,20 +303,20 @@ The remainder of this manuscript is structured as follows: \secref{sec:backgroun
         \label{sfig:sidb-logic-hex-tile}
     }
     \caption{
-        (\textbf{a}) Charge-based \gls{sidb} logic unit cell: a pair of closely-spaced \glspl{sidb} share a single excess electron whose position encodes logic \texttt{0} or \texttt{1}, controlled by the location of a nearby \enquote{perturber} \gls{sidb}. %The top panel shows the geometric configuration without explicit charges, while the middle and bottom panels illustrate the simulated charge localization corresponding to \texttt{0} and \texttt{1}.
-        (\textbf{b}) Example \textsc{nand} gate from the \emph{Bestagon} standard-tile library, with inputs applied at the upper pins via perturbers, and the output sensed at the lower pin; the central region hosts the \gls{sidb} arrangement realizing the gate. With permission, (a) is reproduced from~\cite{ng2023blueprint}, (b) is adapted from~\cite{drewniok2025quicktrace}.
+        (\textbf{a}) \gls{sidb} logic unit cell: a pair of closely-spaced \glspl{sidb} share a charge whose position encodes logic \texttt{0} or \texttt{1}, controlled by the location of a nearby \enquote{perturber} \gls{sidb}.
+        (\textbf{b}) Example \textsc{nand} gate from the \emph{Bestagon} library, with inputs applied at the upper pins via perturbers, and the output sensed at the lower pin; the central region hosts \glspl{sidb} that implement the gate function. With permission, (a) is reproduced from~\cite{ng2023blueprint}, (b) is adapted from~\cite{drewniok2025quicktrace}.
     }
     \label{fig:sidb-logic}
 \end{figure}
 
 
 
-\Glspl{sidb} can be manufactured on the surface of hydrogen-passivated Si(100)-2$\times$1 with the tip of a scanning-tunneling microscope \cite{achal2018lithography, huff2017atomic, pitters2024atomically}. Each \gls{sidb} can hold discrete charge states, including negative, neutral, or positive. In densely packed ensembles, the charge state of each \gls{sidb} is determined by their collective interaction, bulk doping levels, and external electrostatic influences~\cite{pitters2024atomically}.
-Binary logic states can be encoded by the position of a charge shared among closely positioned \glspl{sidb} (\fref{sfig:sidb-logic-pairs}), enabling the realization of an experimentally demonstrated \textsc{or} gates with a footprint of only $5\times\SI{6}{\nm^2}$~\cite{huff2018binary}.
-Further exploration of \gls{sidb} gate and circuit designs~\cite{ruella2025comprehensive,vieira2022threeinput} was enabled by \emph{SiQAD}~\cite{ng2020siqad}, an open-source \gls{cad} tool and simulation environment for \gls{sidb} layouts. Building on these tools, the \emph{Bestagon} standard-tile library~\cite{walter2022hexagons} was introduced, featuring standardized \gls{io} pin locations and a central canvas on which \glspl{sidb} are placed to implement logic (\fref{sfig:sidb-logic-hex-tile}).
+\Glspl{sidb} can be fabricated on the surface of hydrogen-passivated Si(100)-2$\times$1 with the tip of a scanning-tunneling microscope \cite{achal2018lithography,pitters2024atomically}. Each \gls{sidb} can hold discrete charge states, including negative, neutral, or positive. In densely packed ensembles, the charge state of each \gls{sidb} is determined by their collective interaction, bulk doping levels, and external electrostatic influences~\cite{pitters2024atomically}.
+Binary logic states can be encoded by the position of a charge shared among closely positioned \glspl{sidb} (\fref{sfig:sidb-logic-pairs}), enabling the experimental demonstration of an \textsc{or} gate with a footprint of only $5\times\SI{6}{\nm^2}$~\cite{huff2018binary}.
+Further exploration of \gls{sidb} logic designs was enabled by \emph{SiQAD}~\cite{ng2020siqad}, a \gls{cad} tool specialized for \gls{sidb} logic. Building on these tools, the \emph{Bestagon} standard-tile library~\cite{walter2022hexagons} was introduced, featuring standardized \gls{io} pin locations and a central canvas on which \glspl{sidb} are placed to implement logic (\fref{sfig:sidb-logic-hex-tile}).
 The \emph{Bestagon} library has allowed \emph{fiction}~\cite{walter2019fiction}, an \gls{eda} framework specialized for \gls{fcn}, to take gate-level netlists as input and synthesize dot-accurate, fabricable \gls{sidb} layouts~\cite{walter2022hexagons}, forming the backbone of this work.
 
-\Gls{sidb} logic, like other \gls{fcn} families, uses spatially partitioned clock zones to enforce directed data flow~\cite{ng2020siqad, chiu2020poissolver}. Hanging or buried electrodes apply phase-shifted sinusoidal potentials that modulate the surface band bending and thereby the local charge density~\cite{chiu2020poissolver}. Adjacent electrodes are offset by \SI{90}{\degree} in phase, producing \enquote{active} regions where charges are present, and computation occurs, separated by \enquote{inactive} regions that are effectively charge-free buffers. A simple, area-efficient arrangement places these clock zones in rows to support unidirectional, purely combinational logic~\cite{lent1997device,chiu2020poissolver}.
+\Gls{sidb} logic, like other \gls{fcn} families, uses spatially partitioned clock zones to enforce directed data flow~\cite{ng2020siqad, chiu2020poissolver}. Hanging or buried electrodes apply phase-shifted sinusoidal potentials that modulate the surface band bending and thereby the local charge density~\cite{chiu2020poissolver}. Adjacent electrodes are offset by \SI{90}{\degree} in phase, producing \enquote{active} regions where charges are present, and computation occurs, separated by \enquote{inactive} regions that are effectively charge-free buffers. An area-efficient arrangement places these clock zones in rows to support unidirectional, purely combinational logic~\cite{lent1997device,chiu2020poissolver}.
 Interfacing with \gls{cmos} can be achieved by biasing inputs electrostatically via electrodes~\cite{chiu2020poissolver}, while outputs can be sensed using charge-sensitive devices such as single-electron transistors~\cite{fuechsle2012singleatom, prager2009integration, bohloul2017quantum}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -324,9 +324,9 @@ Interfacing with \gls{cmos} can be achieved by biasing inputs electrostatically 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work} \label{sec:related-work}
 
-\TODO{Section intro}
+In this section, \secref{sec:related-work-fcn-eda} surveys existing \gls{fcn} \gls{eda} frameworks, and \secref{sec:related-work-sidb-ml-accel} reviews \gls{sidb} \gls{mxu} designs. Together, they contextualize the proposed \gls{rtl}-to-atoms flow.
 
-\subsection{Electronic Design Automation for FCN}
+\subsection{Electronic Design Automation for FCN}\label{sec:related-work-fcn-eda}
 
 Aside from \emph{fiction}, other \gls{fcn} \gls{eda} frameworks target \gls{nml}, a field-coupled style in which information is stored and propagated via the collective magnetization of interacting nanomagnets rather than mobile charges.\todo{Sam to Marcel: in light of your comment that NML could better be introduced in sections 1 or 2, I made a few attempts and didn't land on a clean/punchy narrative without adding too much text. So I've instead resorted to adding an inline introduction here, hope it works.}
 Within this setting, \emph{ToPoliNano}~\cite{riente2017topolinano} provides a top-down flow from structural VHDL descriptions to in-plane \gls{nml} layouts with clocking-aware placement and routing.
@@ -345,7 +345,7 @@ In contrast, the present work targets the emerging atomic-scale \gls{sidb} logic
     \label{fig:mxu-systolic-array}
 \end{figure}
 
-\subsection{SiDB ML Accelerators}
+\subsection{SiDB ML Accelerators}\label{sec:related-work-sidb-ml-accel}
 
 Before dedicated \gls{sidb}-aware \gls{eda} tooling became available, studies of \gls{sidb} applications were limited and largely depended on manual \gls{cad} prototyping with extrapolated area and latency estimates.
 One such example was an \gls{sidb} \gls{mxu}~\cite{ng2023blueprint} for \gls{ml} acceleration, which mirrored design choices from Google's \gls{tpu}v1~\cite{jouppi2017indatacenter}: the matrix-vector multiplications underpinning \gls{ml} workloads were realized as 8-bit integer \gls{mac} operations to reduce computational cost, and both designs employed a systolic-array architecture relying on regular arrangements of \glspl{pe}---homogeneous logic modules that operate on their inputs and pass results to adjacent \glspl{pe}---to perform computation (\fref{fig:mxu-systolic-array}).
@@ -371,8 +371,8 @@ While that blueprint study reported promising area and power estimates against t
 \section{Proposed Methodology} \label{sec:methodology}
 
 This section presents the proposed end-to-end \gls{rtl}-to-atoms design and synthesis flow.
-\secref{sec:methodology-verilog} describes the hierarchical \gls{rtl} architecture at the core of the synthesis flow, which satisfies tooling requirements.
-Subsequently, \secref{sec:methodology-rtl-to-netlist} covers the \gls{rtl}-to-netlist conversion, and \secref{sec:methodology-netlist-to-atoms} describes the netlist-to-atoms physical design with technology-specific optimizations.
+\secref{sec:methodology-verilog} describes the hierarchical \gls{rtl} architecture at the core of the flow, which satisfies tooling requirements.
+Subsequently, \secref{sec:methodology-rtl-to-netlist} covers the \gls{rtl}-to-netlist conversion, and \secref{sec:methodology-netlist-to-atoms} describes the netlist-to-atoms physical design with optimizations for \glspl{sidb}.
 
 \subsection{\titlecap{\glsentrylong{mxu} in Hierarchical RTL}}\label{sec:methodology-verilog}
 
@@ -426,16 +426,16 @@ In reconciliation, this work adopts a hierarchical \gls{rtl} organization which 
 %
 Both are parameterized by the weight and activation bit-widths, allowing the study of their scaling behavior in \secref{sec:results}.
 
-Correctness was validated with test benches across the stack, including both the combinational core and the clocked shell. These tests confirmed correct weight storage in preload mode and accurate \gls{mac} results in compute mode for representative input activations, stored weights, and partial sums.
-In particular, interleaved inputs for concurrent \gls{mac} operation across all pipeline stages was also verified. All simulations were performed using Icarus Verilog~\cite{icarusverilog}. The logical correctness of the \gls{pe} was thus established prior to synthesis and physical mapping. The full open-source codebase is available on GitHub.\footnote{GitHub repository: \url{https://github.com/samuelshng/sidb-mxu-verilog}}
+Correctness was validated with test benches across both layers. These tests confirmed correct weight storage in preload mode and accurate \gls{mac} results in compute mode for representative inputs.
+In particular, interleaved inputs for concurrent \gls{mac} operation across all pipeline stages was also verified. All simulations were performed using Icarus Verilog~\cite{icarusverilog}, establishing logical correctness of the \gls{pe} prior to synthesis and physical mapping. The codebase is fully open sourced.\footnote{GitHub repository: \url{https://github.com/samuelshng/sidb-mxu-verilog}}
 
 \subsection{RTL-to-Netlist}\label{sec:methodology-rtl-to-netlist}
 
 
 With the \gls{rtl} design verified, the first stage of the synthesis flow is to generate a gate-level netlist. To accomplish this, this work uses \emph{Yosys}~\cite{wolf2013yosys} to map arithmetic operators such as \mbox{accumulation (\texttt{+})} and \mbox{multiplication (\texttt{*})} into gate-level \glspl{alu}.
-Absent explicit directives, \emph{Yosys} selects \gls{cmos}-optimized \glspl{alu}, which can underperform in \gls{fcn}'s strictly planar fabrics which force gates and wires to share the same plane, altering the area and latency trade-offs \cite{kim2010multipliers}. To ensure technology-appropriate choices, this work supplies explicit gate-level descriptions of a ripple-carry adder and an array multiplier to \emph{Yosys}, both of which have been shown to suit \gls{fcn} technologies thanks to their regular structure, which eases wiring congestion and reduces wire crossings \cite{kim2010multipliers}.
-The mapped netlist is then rewritten as an \gls{aig} and optimized with ABC's \textit{\&deepsyn}~\cite{brayton2010abc} strategy to reduce the network's node count.
-Finally, the resulting \gls{aig} is validated against the \gls{pe}-core test benches to confirm functional correctness.
+Absent explicit directives, \emph{Yosys} selects \gls{cmos}-optimized \glspl{alu}, which underperform in \gls{fcn} due to differences in area and latency trade-offs under the strictly planar fabric~\cite{kim2010multipliers}.
+To ensure technology-appropriate choices, this work supplies explicit gate-level descriptions of a ripple-carry adder and an array multiplier to \emph{Yosys}, both of which have been shown to be suitable for \gls{fcn} thanks to their regular structure, which eases wiring congestion \cite{kim2010multipliers}.
+The mapped netlist is then rewritten as an \gls{aig} and optimized with ABC's \textit{\&deepsyn}~\cite{brayton2010abc} strategy to reduce its node count, and re-validated against test benches to confirm functional correctness.
 
 \subsection{Netlist-to-Atoms}\label{sec:methodology-netlist-to-atoms}
 
@@ -469,7 +469,7 @@ This work adopts it as the objective for the technology mapper to prioritize gat
 The placement-and-routing framework within \emph{fiction} was first established for \gls{qca} circuits on a Cartesian grid~\cite{walter2019fiction}\todo{Sam to Marcel: I removed 2DDWave mention here altogether because the clocking scheme only really becomes more important in the Hexagonalization subsec}. Subsequent support for \gls{sidb} logic was enabled through a coordinate mapping that performs a $45^\circ$ rotation of the Cartesian layout followed by its projection onto the hexagonal \gls{sidb} lattice~\cite{hofmann2023scalable}.
 This rotation, however, can lead to suboptimal results: a layout that is compact on the Cartesian grid may become significantly taller after hexagonalization when there exists numerous diagonal signal paths in the Cartesian layout that are strongly offset from the northwest corner, which map to long vertical paths in the hexagonal layout. Layouts with a more balanced aspect ratio are therefore preferred.
 While the older \emph{ortho} algorithm offers no configurable compensation, the more recent \gls{gold} algorithm~\cite{hofmann2025graphoriented} exposes a customizable cost objective for placement and routing, enabling \gls{sidb}-specific optimizations.
-Whereas the default cost objective for \gls{gold} is the total area, this work introduces new cost objectives that reduce the aspect-ratio distortion introduced by the $45^\circ$ rotation by encouraging more square footprints in the Cartesian placement-and-routing step, which is further detailed in \secref{sec:results-synthesis-metrics}.
+Whereas the default cost objective for \gls{gold} is the total area, this work introduces new cost objectives that reduce the aspect-ratio distortion introduced by the $45^\circ$ rotation by encouraging more square footprints, which is further detailed in \secref{sec:results-synthesis-metrics}.
 
 \subsubsection{Hexagonalization Improvements}
 
@@ -487,11 +487,11 @@ This section evaluates the \gls{rtl}-to-atoms flow using the synthesized \gls{pe
 
 \subsection{Experimental Protocol}\label{sec:results-experimental-protocol}
 
-This comparative study characterizes how activation and weight bit-widths scale and reports synthesis results across various technology mapping, placement, and routing settings.
+This comparative study characterizes how activation and weight bit-widths scale and reports synthesis results across various synthesis configurations.
 To this end, the combinational \gls{pe}-core (\secref{sec:methodology-verilog}) is synthesized for 2-, 4-, and 8-bit weights and activations, henceforth denoted W2A2, W4A4, and W8A8, respectively.
-These selections correspond to widely studied quantized regimes for CNNs and Transformers where the dominant operations reduce to matrix multiplications that map directly onto an \gls{mxu} \cite{esser2020learnedstepsizequantization,banner2019post,jouppi2017indatacenter}.
+These selections correspond to widely studied quantized regimes for  \gls{ml} workloads where the dominant operations reduce to dense matrix multiplications~\cite{esser2020learnedstepsizequantization,banner2019post,jouppi2017indatacenter}.
 The \gls{rtl}-to-netlist flow from this work instructs \emph{Yosys} to use technology-appropriate \glspl{alu} to produce an \gls{aig} (\secref{sec:methodology-rtl-to-netlist}), which is then optimized using ABC's \emph{\&deepsyn} strategy~\cite{brayton2010abc}. %On a AMD Ryzen 9 3900X CPU, \emph{\&deepsyn} reached its internal iteration limit at \SI{0.4}{\hour}, \SI{1}{\hour}, and \TODO{} for W2A2, W4A4, and W8A8, respectively.
-In the netlist-to-atoms flow, the \emph{Bestagaon} library~\cite{walter2022hexagons} is used. Technology mapping with uniform cost serves as the baseline for comparison with \gls{fom}-aware counterparts. \emph{ortho} and \gls{gold} are used for placement and routing, with \gls{plo} always performed subsequently.
+In the netlist-to-atoms flow, two \emph{Bestagon} library~\cite{walter2022hexagons} variants are compared during technology mapping: a uniform cost baseline, and an \gls{fom}-aware counterpart. \emph{ortho} and \gls{gold} are used for placement and routing.
 
 \subsection{Results}\label{sec:results-synthesis-metrics}
 
@@ -501,7 +501,7 @@ In the netlist-to-atoms flow, the \emph{Bestagaon} library~\cite{walter2022hexag
   \label{tab:pe-results-extended}
   \begin{minipage}{\linewidth}
     \centering
-    \begin{tabular}{l@{\hskip 6pt}l@{\hskip 6pt}l@{\hskip 12pt}
+    \begin{tabular}{l@{\hskip 6pt}l@{\hskip 6pt}l@{\hskip 6pt}
                     r@{~$\times$~}l@{~$=$~}r@{\hskip 12pt}
                     r}
       \toprule
@@ -514,23 +514,23 @@ In the netlist-to-atoms flow, the \emph{Bestagaon} library~\cite{walter2022hexag
       \cmidrule(lr{12pt}){4-6}
         & & & $w$ & $h$ & $A_\text{uni}$ & \\
       \midrule
-      Default~\cite{ng2025building} & W8A8 & \emph{ortho} &
+      Default~\cite{ng2025building} & W8A8 & \emph{ortho}+\gls{plo} &
       \num{515} & \num{1043} & \num{537145} &
       \num{541284} \\
       \cmidrule(lr){1-7}
-      \multirow[t]{5}{*}{\makecell[tl]{Optimized\\(This work)}} & W8A8 & \emph{ortho} &
+      \multirow[t]{5}{*}{\makecell[tl]{Optimized\\(This work)}} & W8A8 & \emph{ortho}+\gls{plo} &
       \num{474} & \num{967} & \num{458358} &
       \num{470830} \\[0.8ex]
-        & \multirow[t]{2}{*}{W4A4} & \emph{ortho} &
+        & \multirow[t]{2}{*}{W4A4} & \emph{ortho}+\gls{plo} &
       \num{143} & \num{333} & \num{47619} &
       \num{56744} \\
-        &  & \emph{gold} &
+        &  & \emph{gold}+\gls{plo} &
       \num{116} & \num{241} & \num{27956} &
       \num{70070} \\[0.8ex]
-        & \multirow[t]{2}{*}{W2A2} & \emph{ortho} &
+        & \multirow[t]{2}{*}{W2A2} & \emph{ortho}+\gls{plo} &
       \num{67} & \num{151} & \num{10117} &
       \num{10833} \\
-        &  & \emph{gold} &
+        &  & \emph{gold}+\gls{plo} &
       \num{48} & \num{98} & \num{4704} &
       \num{5457} \\
       \bottomrule
@@ -538,8 +538,8 @@ In the netlist-to-atoms flow, the \emph{Bestagaon} library~\cite{walter2022hexag
     \begin{minipage}{\linewidth}
       \footnotesize
       \vspace{0.5em}
-      Here, \enquote{default} and \enquote{optimized} \glspl{alu} indicate \emph{Yosys}'s \gls{alu} selection mode during the \gls{rtl}-to-netlist step; $w$, $h$, and $A$ denote the tile counts along width, height, and footprint ($A = w \times h$); $A_\text{uni}$ and $A_\text{FoM}$ denote the Bestagon variant used for technology mapping.  %\TODO{Do a final check with sweep data to make sure the reported minimums accurately reflect latest results.}
-      \gls{plo} was used together with each algorithm.
+      \enquote{Default} and \enquote{optimized} \glspl{alu} indicate \emph{Yosys}'s \gls{alu} selection mode; $w$ and $h$ denote the tile counts along the width and height; $A = w \times h$; $A_\text{uni}$ and $A_\text{FoM}$ denote the \emph{Bestagon} variant used for technology mapping.  %\TODO{Do a final check with sweep data to make sure the reported minimums accurately reflect latest results.}
+      % \gls{plo} was used together with each algorithm.
     \end{minipage}
   \end{minipage}
 \end{table}
@@ -595,7 +595,7 @@ Compared to prior results from \cite{ng2025building}, which left \gls{alu} selec
 Turning to the \gls{fom}-informed technology mapping results, the corresponding layouts are consistently larger than those obtained by treating all gates with equal preference, indicating that the technology mapper has chosen costlier solutions that make use of more robust gates.
 This area trade-off comes with the benefit that \gls{sidb} gates with higher reliability metrics are more often employed in the layout, which can ultimately yield a more robust \gls{sidb} logic implementation.
 
-Comparing placement and routing algorithms, while the W8A8 \gls{pe} has an \gls{aig} that exceeds \gls{gold}'s tractable problem size, W4A4 and W2A2 remain sufficiently small for \gls{gold} to successfully place and route layouts, achieving a $\approx \SIrange{40}{50}{\percent}$ area reduction relative to their \emph{ortho}-based counterparts. In the \gls{fom}-aware results, however, a pronounced area increase arises for W4A4, where the \gls{gold} result is even larger than that from \emph{ortho}. This work interprets the outlier as evidence that, under \gls{fom}-aware technology mapping, the \gls{aig} is already near the upper bounds of \gls{gold}'s ability to provide consistent solutions: among $630$ trials for this configuration, only $1$ reached a completed layout. Nevertheless, for configurations that remain within \gls{gold}'s effective scaling regime, it delivers area reductions that directly improve manufacturability and reduce power consumption in practice.
+Comparing placement and routing algorithms, while the W8A8 \gls{aig} exceeds \gls{gold}'s tractable problem size, W4A4 and W2A2 remain sufficiently small for \gls{gold} to successfully place and route, achieving a $\approx\!\SIrange{40}{50}{\percent}$ area reduction relative to \emph{ortho}-based counterparts. However, the \gls{fom}-aware synthesis of W4A4 using \gls{gold} exhibits a pronounced area increase. This work interprets the outlier as evidence that, under \gls{fom}-aware technology mapping, the \gls{aig} is already near the upper bounds of \gls{gold}'s ability to provide consistent solutions: only $1$ trial succeeded among $630$ trials for this configuration. Nevertheless, configurations that remain within \gls{gold}'s effective scaling regime yield area reductions that directly benefit manufacturability and reduce power consumption in practice.
 
 Part of the improvement achieved with \gls{gold} arises from refining the cost objectives in the \gls{sidb}-specific synthesis workflow (\secref{subsubsec:methodology-p-and-r-improvements-for-sidb}). Two additional \gls{gold} cost objectives were implemented---Manhattan distance ($x+y$) and squared Euclidean distance ($x^2+y^2$)---and compared against the default area-based objective in \tref{tab:gold-cost-comparison}. For the W2A2 configuration, both the best and average layout areas improve, with the gains being more pronounced in the average case and the squared Euclidean objective yielding the smallest minimum area. For W4A4, modest improvements persist in the average case, but no benefit is observed in the minimum area. This behavior is consistent with W4A4 already operating near the upper end of \gls{gold}'s practical scaling range, where a reduced number of successful runs can skew the distribution of best-case results.
 
@@ -607,14 +607,14 @@ Despite this estimation gap, the \gls{pe}-core captures the computational portio
 Using the tile dimensions in \tref{tab:pe-results-extended}, the physical dimensions can be computed by $w \times \SI{23.06}{\nano\meter}$ and $h \times \SI{13.06}{\nano\meter}$.\footnote{These scaling factors differ from~\cite{ng2025building} due to corrected calculation factors.}
 Relative to the manually estimated dimensions of $\SI{5000}{\nano\meter} \times \SI{8150}{\nano\meter}$~\cite{ng2023blueprint}, the synthesized layout using optimized \glspl{alu} represent a $3.4\times$ area increase; the gap would further widen if the entire \gls{pe} was synthesized.
 
-Several factors contribute to this discrepancy. Whereas the manual estimation used hand-designed components with relatively high logic gate density~\cite{ng2023blueprint}, this work employs the \emph{Bestagon} gate library, whose larger tile template deliberately ensures sufficient separation between the logic canvases of neighboring tiles to minimize inter-gate interference~\cite{walter2022hexagons}. In addition, while the manual estimation directly employed optimized \gls{alu} layouts, this work can only influence \gls{alu} selection at the \gls{rtl}-to-netlist synthesis stage via \emph{Yosys}; after ABC's optimization, the boundaries of arithmetic elements become blurred, limiting subsequent possibilities of exploiting arithmetic structure. Finally, the large W8A8 \gls{aig} is computationally intractable for \gls{gold} to place and route, preventing the $\approx \SIrange{40}{50}{\percent}$ area reductions observed for smaller configurations from being realized at this bit-width. Nevertheless, the successful end-to-end design flow achieved in this work demonstrates what state-of-the-art \gls{fcn} \gls{eda} tools can realize on the \gls{sidb} platform, combining manufacturable layouts with full testbench-based verification and highlighting opportunities for further optimization.
+Several factors contribute to this discrepancy. Whereas the manual estimation used hand-designed components with relatively high logic gate density~\cite{ng2023blueprint}, the \emph{Bestagon} gate library used in synthesis deliberately chooses a larger footprint to ensure sufficient separation between logic canvases of neighboring tiles to minimize inter-gate interference~\cite{walter2022hexagons}. In addition, while the manual estimation directly used optimal \gls{alu} layouts, this work can only influence \gls{alu} selection at the \gls{rtl}-to-netlist stage. The resulting \gls{aig} blurs the boundaries of arithmetic elements, limiting subsequent possibilities of exploiting those structures. Finally, the large W8A8 \gls{aig} is computationally intractable for \gls{gold} to place and route, preventing the $\approx \SIrange{40}{50}{\percent}$ area reductions observed for smaller configurations from being realized at this bit-width. Nevertheless, the successful end-to-end design flow achieved in this work demonstrates what state-of-the-art \gls{fcn} \gls{eda} tools can realize on the \gls{sidb} platform, combining manufacturable layouts with full testbench-based verification and highlighting opportunities for further optimization.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Future Work
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion and Future Work}\label{sec:conclusion-future-work}
 
-This work has demonstrated an end-to-end \gls{rtl}-to-atoms synthesis flow for a quantized \gls{sidb}-based \gls{mxu} \gls{pe} with fully verifiable behavior across abstraction levels, enabled by a hierarchical \gls{rtl} organization that separates a combinational \gls{pe}-core from its clocked shell. By explicitly selecting \gls{sidb}-appropriate \glspl{alu} in \emph{Yosys} and tailoring technology mapping, placement-and-routing, and hexagonalization to \gls{sidb} logic, the presented framework achieves roughly \SI{15}{\percent} reduction in synthesized \gls{pe}-core area over prior flows and realizes additional footprint savings of $\approx \SIrange{40}{50}{\percent}$ for configurations within the scaling range of newer placement-and-routing algorithms, while making explicit the trade-off between footprint and device-level robustness under \gls{fom}-aware mapping. Together, these components establish a reproducible benchmark for atomic-scale \gls{eda} that links \gls{rtl} design decisions, \gls{eda} tooling, and manufacturable \gls{sidb} layouts.
+This work has demonstrated an end-to-end \gls{rtl}-to-atoms synthesis flow for a quantized \gls{sidb}-based \gls{mxu} \gls{pe} with fully verifiable behavior across abstraction levels, enabled by a hierarchical \gls{rtl} organization that separates a combinational \gls{pe}-core from its clocked shell. By explicitly selecting \gls{sidb}-appropriate \glspl{alu} in \emph{Yosys} and tailoring technology mapping, placement-and-routing, and hexagonalization to \gls{sidb} logic, the presented framework achieves $\approx\!\SI{15}{\percent}$ reduction in synthesized \gls{pe}-core area over prior flows and realizes additional footprint savings of $\approx\!\SIrange{40}{50}{\percent}$ for configurations within the scaling range of newer placement-and-routing algorithms, while making explicit the trade-off between footprint and device-level robustness under \gls{fom}-aware mapping. Together, these components establish a reproducible benchmark for atomic-scale \gls{eda} that links \gls{rtl} design decisions, \gls{eda} tooling, and manufacturable \gls{sidb} layouts.
 
 The findings also reveal several avenues for future work to bridge remaining gaps with manual expert designs.
 Preservation of frequently used arithmetic structures across the synthesis stages will allow optimized \gls{alu} layouts to be directly applied in the physical layout stage.
