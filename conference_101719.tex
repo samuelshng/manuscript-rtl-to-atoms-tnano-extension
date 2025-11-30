@@ -39,8 +39,8 @@
 % \setlist[description]{leftmargin=\parindent,labelindent=\parindent}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-\usepackage[textsize=tiny]{todonotes}
-% \usepackage[textsize=tiny,disable]{todonotes}
+% \usepackage[textsize=tiny]{todonotes}
+\usepackage[textsize=tiny,disable]{todonotes}
 % Maximize margin width to still barely see the sides of todonotes
 \setlength{\marginparwidth}{1.3cm}
 
@@ -173,7 +173,7 @@
 
 \newcommand{\applyalwaysshortacros}{%
   \glsunset{ai}%
-  \glsunset{ml}%
+  % \glsunset{ml}%
   \glsunset{llm}%
   \glsunset{cmos}%
   \glsunset{cad}%
@@ -354,8 +354,8 @@ At the \gls{pe} level, the core operation is a \gls{mac}: $s_{\text{out}} = s_{\
 In the implementation of~\cite{ng2023blueprint}, each matrix-multiplication job consisted of two primary phases:
 %
 \begin{enumerate*}
-  \item \emph{preloading}, where weights ($w$) are loaded into the array from the top edge and transverse column-wise until they arrive at the designated \glspl{pe} for storage;
-  \item \emph{computing}, where activations ($a$) are streamed from the left side and are multiplied with the stored weights and accumulated with partial sums; activations continue to transverse row-wise while partial sums transverse column-wise for further accumulation until they reach the array's bottom edge.
+  \item \emph{preloading}, where weights ($w$) are loaded into the array from the top edge and traverse column-wise until they arrive at the designated \glspl{pe} for storage;
+  \item \emph{computing}, where activations ($a$) are streamed from the left side and are multiplied with the stored weights and accumulated with partial sums; activations continue to traverse row-wise while partial sums traverse column-wise for further accumulation until they reach the array's bottom edge.
 \end{enumerate*}
 %
 Additional input signals control the operating phase.
@@ -374,7 +374,7 @@ This section presents the proposed end-to-end \gls{rtl}-to-atoms design and synt
 \secref{sec:methodology-verilog} describes the hierarchical \gls{rtl} architecture at the core of the flow, which satisfies tooling requirements.
 Subsequently, \secref{sec:methodology-rtl-to-netlist} covers the \gls{rtl}-to-netlist conversion, and \secref{sec:methodology-netlist-to-atoms} describes the netlist-to-atoms physical design with optimizations for \glspl{sidb}.
 
-\subsection{\titlecap{\glsentrylong{mxu} in Hierarchical RTL}}\label{sec:methodology-verilog}
+\subsection{\titlecap{\glsentrylong{mxu}} in Hierarchical RTL}\label{sec:methodology-verilog}
 
 \begin{algorithm}[tbp]
 \footnotesize
@@ -401,7 +401,7 @@ Subsequently, \secref{sec:methodology-rtl-to-netlist} covers the \gls{rtl}-to-ne
     \Procedure{ProcessingElementLogic}{}
     \State $p \gets \text{signed}(w_\text{mem}) \times \text{signed}(a)$\Comment{Multiply stored $w$ with $a$}
     \State $s_\text{out} \gets s_\text{in} + \text{signExtend}(p, 24)$\Comment{Sum with partial sum}
-    \If{$m = \text{PRELOAD}$ \textbf{and} $PE_{\text{target-}y} = PE_{y}$}
+    \If{$m = \text{PRELOAD}$ \textbf{and} $\mathit{PE}_{\text{target-}y} = \mathit{PE}_{y}$}
        \State $w_\text{memOut} \gets w_\text{load}$\Comment{Update stored weight}
     \EndIf
     \State \Return $s_\text{out}$, $w_\text{memOut}$, and other pass-through wires

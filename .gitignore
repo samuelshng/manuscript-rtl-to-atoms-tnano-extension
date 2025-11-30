@@ -49,3 +49,4 @@ build/
 *.pyc
 /reference-papers
 /draft-versions
+/submission-package
