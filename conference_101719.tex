@@ -39,8 +39,8 @@
 % \setlist[description]{leftmargin=\parindent,labelindent=\parindent}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-% \usepackage[textsize=tiny]{todonotes}
-\usepackage[textsize=tiny,disable]{todonotes}
+\usepackage[textsize=tiny]{todonotes}
+% \usepackage[textsize=tiny,disable]{todonotes}
 % Maximize margin width to still barely see the sides of todonotes
 \setlength{\marginparwidth}{1.3cm}
 
@@ -252,9 +252,9 @@
 As \gls{cmos} scaling slows and \gls{ai} demand soars, atomic-scale platforms such as quantum-dot logic based on \glspl{sidb} offer a promising path toward energy-efficient computation, yet practical design flows from \gls{rtl} specifications to manufacturable layouts remain limited.
 This work presents an \gls{rtl}-to-atoms synthesis framework for a quantized \glsentrylong{mxu} targeting \gls{sidb}-based \gls{fcn}.
 Building on recent advances in \gls{sidb}-aware \gls{eda}, the framework combines a hierarchical, parameterized \gls{rtl} architecture with platform-optimized \glsentrylongpl{alu}, reducing the synthesized logic core of processing elements by about $\bm{15\,\%}$ compared to prior flows.
-Key improvements were also made to the synthesis workflow, retargeting tools previously tuned for other \gls{fcn} technologies\todo{Sam to Marcel: do you think this is clearer? Original comment was ``what was it optimized to before?''} toward \gls{sidb} logic and incorporating figure-of-merit awareness, which together ensure that the synthesized layouts achieve favorable area scaling and maximum throughput while balancing operational robustness.
-Evaluations across multiple quantization bit-widths show substantial footprint reductions for configurations within the practical range of latest placement-and-routing algorithms while preserving testbench-validated functional correctness from \gls{rtl} to dot-accurate \gls{sidb} layouts, thereby establishing a reproducible benchmark for \gls{eda} on atomic-scale computing.
-This represents a significant milestone, bridging previously manually-intensive workflows with scalable, automated methodologies, thus providing a valuable foundation for future design and optimization of \gls{sidb}-based accelerators.
+Key improvements were also made to the synthesis workflow to better optimize for \gls{sidb}-logic and incorporate figure-of-merit awareness, which together ensure that the synthesized layouts achieve favorable area scaling and throughput while balancing operational robustness.
+Evaluations across multiple bit-widths show substantial footprint reductions for configurations within the tractable range of latest placement-and-routing algorithms while preserving testbench-validated correctness from \gls{rtl} to dot-accurate \gls{sidb} layouts, thereby establishing a reproducible benchmark for \gls{eda} on atomic-scale computing.
+This represents a significant milestone, bridging manually-intensive workflows with scalable, automated methodologies, providing a valuable foundation for future design efforts for \gls{sidb}-based accelerators.
 %
 \end{abstract}
 
@@ -283,9 +283,9 @@ Prior to the maturity of \gls{sidb} \gls{eda} tools, application-scale research 
 To facilitate practical exploration, an earlier conference version of this work~\cite{ng2025building} implemented the \gls{mxu} as a \gls{rtl} Verilog design, employing clocked registers as an abstract proxy for the underlying \gls{fcn} clocking behavior. With a workflow spanning multiple \gls{eda} frameworks, the study synthesized the \gls{rtl} implementation into dot-accurate \gls{sidb} layouts, realizing an automated, scalable, and verifiable end-to-end \gls{sidb} design flow using state-of-the-art \gls{eda} tools.
 
 Despite this progress, the conference version of the \gls{rtl}-to-atoms flow in~\cite{ng2025building} left several aspects only coarsely explored: the choice of \glspl{alu} was left to logic synthesis frameworks, which do not take \gls{fcn}'s unique architectural preferences into account. Weights and activations were fixed to a single 8-bit configuration, preventing systematic study of how the synthesized layouts scale with precision.
-This work therefore provides a substantial extension upon the original methodology at multiple layers: at the \gls{rtl} design layer, parameterized quantization enabled a systematic study of downstream trade-offs in the synthesis pipeline; for \gls{rtl}-to-netlist synthesis, the introduction of technology-appropriate \glspl{alu} reduced the resulting area; and for netlist-to-atoms synthesis, multiple \gls{sidb}-oriented refinements to technology mapping, placement-and-routing, and hexagonalization further had a significant impact on the quality of result.
+This work therefore provides a substantial extension upon the original methodology at multiple layers: at the \gls{rtl} design layer, parameterized quantization enabled a systematic study of downstream trade-offs in the synthesis pipeline; for \gls{rtl}-to-netlist synthesis, the introduction of technology-appropriate \glspl{alu} reduced the resulting area; and for netlist-to-atoms synthesis, multiple \gls{sidb}-oriented refinements to technology mapping, placement-and-routing, and hexagonalization further had a significant impact on the quality of the results.
 These contributions transform a one-off demonstration into a concrete framework optimized for \gls{sidb} logic synthesis, revealing how architectural and layout decisions shape the strengths and limitations of current tools.
-The remainder of this manuscript is structured as follows: \secref{sec:background} reviews \gls{sidb} logic background and \gls{eda} infrastructure; \secref{sec:related-work} summarizes prior \gls{sidb} \gls{mxu} designs; \secref{sec:methodology} details the hierarchical \gls{rtl} architecture and the \gls{rtl}-to-atoms synthesis flow; \secref{sec:results} presents the synthesis results and discuss their trade-offs; and \secref{sec:conclusion-future-work} concludes with directions for future work.
+The remainder of this manuscript is structured as follows: \secref{sec:background} reviews \gls{sidb} logic background and \gls{eda} infrastructure; \secref{sec:related-work} summarizes prior \gls{sidb} \gls{mxu} designs; \secref{sec:methodology} details the hierarchical \gls{rtl} architecture and the \gls{rtl}-to-atoms synthesis flow; \secref{sec:results} presents the synthesis results and discusses their trade-offs; and \secref{sec:conclusion-future-work} concludes with directions for future work.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Background
@@ -349,7 +349,7 @@ In contrast, the present work targets the emerging atomic-scale \gls{sidb} logic
 
 Before dedicated \gls{sidb}-aware \gls{eda} tooling became available, studies of \gls{sidb} applications were limited and largely depended on manual \gls{cad} prototyping with extrapolated area and latency estimates.
 One such example was an \gls{sidb} \gls{mxu}~\cite{ng2023blueprint} for \gls{ml} acceleration, which mirrored design choices from Google's \gls{tpu}v1~\cite{jouppi2017indatacenter}: the matrix-vector multiplications underpinning \gls{ml} workloads were realized as 8-bit integer \gls{mac} operations to reduce computational cost, and both designs employed a systolic-array architecture relying on regular arrangements of \glspl{pe}---homogeneous logic modules that operate on their inputs and pass results to adjacent \glspl{pe}---to perform computation (\fref{fig:mxu-systolic-array}).
-At the \gls{pe} level, the core operation is a \gls{mac}: $s_{\text{out}} = s_{\text{in}} + (w \cdot a)$, where $s_\text{in}$ the partial sum from the preceding \gls{pe}, $w$ is the stored weight, $a$ is the activation, and $s_\text{out}$ is the updated partial sum.
+At the \gls{pe} level, the core operation is a \gls{mac}: $s_{\text{out}} = s_{\text{in}} + (w \cdot a)$, where $s_\text{in}$ is the partial sum from the preceding \gls{pe}, $w$ is the stored weight, $a$ is the activation, and $s_\text{out}$ is the updated partial sum.
 
 In the implementation of~\cite{ng2023blueprint}, each matrix-multiplication job consisted of two primary phases:
 %
@@ -363,7 +363,7 @@ At the \gls{pe} granularity, each \gls{pe} comprises two signal paths: a \emph{f
 Row-wise clocking incurs deep pipeline stages, which can be taken advantage of by interleaving different inputs by clock cycle to increase the computational throughput.
 
 
-While that blueprint study reported promising area and power estimates against the \gls{tpu}v1~\cite{ng2023blueprint, jouppi2017indatacenter}, its extrapolated nature offered neither a manufacturable layout nor formal verification. The preceding conference version of this work~\cite{ng2025building} bridged this gap by applying latest \gls{sidb} \gls{eda} techniques to demonstrate a \gls{rtl}-to-atoms synthesis flow to a quantized \gls{sidb} \gls{mxu}, which this work substantially refines by introducing technology-specific optimizations and exploring the scaling behavior of different quantization bit-widths, as detailed in the next section.
+While that blueprint study reported promising area and power estimates against the \gls{tpu}v1~\cite{ng2023blueprint, jouppi2017indatacenter}, its extrapolated nature offered neither a manufacturable layout nor formal verification. The preceding conference version of this work~\cite{ng2025building} bridged this gap by applying latest \gls{sidb} \gls{eda} techniques to demonstrate an \gls{rtl}-to-atoms synthesis flow to a quantized \gls{sidb} \gls{mxu}, which this work substantially refines by introducing technology-specific optimizations and exploring the scaling behavior of different quantization bit-widths, as detailed in the next section.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Methodology
@@ -390,7 +390,7 @@ Subsequently, \secref{sec:methodology-rtl-to-netlist} covers the \gls{rtl}-to-ne
     \Statex $m \gets$ PRELOAD (0) or COMPUTE (1) mode
     \Statex $w_\text{load} \gets$ weight to be loaded into memory
     \Statex $\mathit{PE}_{\text{target-}y} \gets$ target Y-index of $w_\text{load}$
-    \Statex $s_\text{in} \gets$ input partial product
+    \Statex $s_\text{in} \gets$ input partial sum
     \Statex $a \gets$ input activation
     \Statex $w_\text{mem} \gets$ weight loaded from delay-line memory
 
@@ -417,7 +417,7 @@ To achieve this work's objectives, the \gls{rtl} implementation must satisfy the
 \end{enumerate*}
 %
 Because the \gls{pe} includes forward and return paths that form an internal feedback loop, a direct \gls{rtl} implementation of the full \gls{pe} would be incompatible with \emph{fiction}.
-In reconciliation, this work adopts a hierarchical \gls{rtl} organization which compartmentalizes the design:
+To reconcile these constraints, this work adopts a hierarchical \gls{rtl} organization which compartmentalizes the design:
 %
 \begin{description}
   \item[Combinational core:] The \gls{pe}'s forward-pass logic is implemented in strictly combinational \gls{rtl}, as shown in Alg.~\ref{alg:pe-forward}, ensuring compatibility with subsequent synthesis steps.
@@ -427,7 +427,7 @@ In reconciliation, this work adopts a hierarchical \gls{rtl} organization which 
 Both are parameterized by the weight and activation bit-widths, allowing the study of their scaling behavior in \secref{sec:results}.
 
 Correctness was validated with test benches across both layers. These tests confirmed correct weight storage in preload mode and accurate \gls{mac} results in compute mode for representative inputs.
-In particular, interleaved inputs for concurrent \gls{mac} operation across all pipeline stages was also verified. All simulations were performed using Icarus Verilog~\cite{icarusverilog}, establishing logical correctness of the \gls{pe} prior to synthesis and physical mapping. The codebase is fully open sourced.\footnote{GitHub repository: \url{https://github.com/samuelshng/sidb-mxu-verilog}}
+In particular, interleaved inputs for concurrent \gls{mac} operation across all pipeline stages were also verified. All simulations were performed using Icarus Verilog~\cite{icarusverilog}, establishing logical correctness of the \gls{pe} prior to synthesis and physical mapping. The codebase is fully open source.\footnote{GitHub repository: \url{https://github.com/samuelshng/sidb-mxu-verilog}}
 
 \subsection{RTL-to-Netlist}\label{sec:methodology-rtl-to-netlist}
 
@@ -466,7 +466,7 @@ This work adopts it as the objective for the technology mapper to prioritize gat
 
 \subsubsection{Placement and Routing Optimizations}\label{subsubsec:methodology-p-and-r-improvements-for-sidb}
 
-The placement-and-routing framework within \emph{fiction} was first established for \gls{qca} circuits on a Cartesian grid~\cite{walter2019fiction}\todo{Sam to Marcel: I removed 2DDWave mention here altogether because the clocking scheme only really becomes more important in the Hexagonalization subsec}. Subsequent support for \gls{sidb} logic was enabled through a coordinate mapping that performs a $45^\circ$ rotation of the Cartesian layout followed by its projection onto the hexagonal \gls{sidb} lattice~\cite{hofmann2023scalable}.
+The placement-and-routing framework within \emph{fiction} was first established for \gls{qca} circuits on a Cartesian grid~\cite{walter2019fiction}. Subsequent support for \gls{sidb} logic was enabled through a coordinate mapping that performs a $45^\circ$ rotation of the Cartesian layout followed by its projection onto the hexagonal \gls{sidb} lattice~\cite{hofmann2023scalable}.
 This rotation, however, can lead to suboptimal results: a layout that is compact on the Cartesian grid may become significantly taller after hexagonalization when there exists numerous diagonal signal paths in the Cartesian layout that are strongly offset from the northwest corner, which map to long vertical paths in the hexagonal layout. Layouts with a more balanced aspect ratio are therefore preferred.
 While the older \emph{ortho} algorithm offers no configurable compensation, the more recent \gls{gold} algorithm~\cite{hofmann2025graphoriented} exposes a customizable cost objective for placement and routing, enabling \gls{sidb}-specific optimizations.
 Whereas the default cost objective for \gls{gold} is the total area, this work introduces new cost objectives that reduce the aspect-ratio distortion introduced by the $45^\circ$ rotation by encouraging more square footprints, which is further detailed in \secref{sec:results-synthesis-metrics}.
@@ -590,7 +590,7 @@ In the netlist-to-atoms flow, two \emph{Bestagon} library~\cite{walter2022hexago
   \end{minipage}
 \end{table}
 
-The best achieved synthesis results of the \gls{pe}-core under the tested configurations are presented in \tref{tab:pe-results-extended}.
+The best achieved synthesis results for the \gls{pe}-core under the tested configurations are presented in \tref{tab:pe-results-extended}.
 Compared to prior results from \cite{ng2025building}, which left \gls{alu} selection to \emph{Yosys}'s CMOS-aligned defaults, the explicit selection of \gls{sidb}-aligned \glspl{alu} yields a \SI{15}{\percent} area reduction, underscoring the importance of steering \gls{eda} tools towards technology-specific component choices.
 Turning to the \gls{fom}-informed technology mapping results, the corresponding layouts are consistently larger than those obtained by treating all gates with equal preference, indicating that the technology mapper has chosen costlier solutions that make use of more robust gates.
 This area trade-off comes with the benefit that \gls{sidb} gates with higher reliability metrics are more often employed in the layout, which can ultimately yield a more robust \gls{sidb} logic implementation.
@@ -605,7 +605,7 @@ The presented synthesis results implement the \gls{pe}-core, which represents al
 A full \gls{pe}-level estimation would additionally require routing the \gls{io} pins of the \gls{pe}-core to the outer \gls{io} of the \gls{pe} module and accounting for the wiring cost of the return pass. Automating these steps calls for further streamlining of \gls{sidb} \gls{eda} tools and is therefore left as future work.
 Despite this estimation gap, the \gls{pe}-core captures the computational portion of the \gls{pe}, making it a meaningful comparison against the manual \gls{sidb} \gls{mxu} estimates from~\cite{ng2023blueprint}.
 Using the tile dimensions in \tref{tab:pe-results-extended}, the physical dimensions can be computed by $w \times \SI{23.06}{\nano\meter}$ and $h \times \SI{13.06}{\nano\meter}$.\footnote{These scaling factors differ from~\cite{ng2025building} due to corrected calculation factors.}
-Relative to the manually estimated dimensions of $\SI{5000}{\nano\meter} \times \SI{8150}{\nano\meter}$~\cite{ng2023blueprint}, the synthesized layout using optimized \glspl{alu} represent a $3.4\times$ area increase; the gap would further widen if the entire \gls{pe} was synthesized.
+Relative to the manually estimated dimensions of $\SI{5000}{\nano\meter} \times \SI{8150}{\nano\meter}$~\cite{ng2023blueprint}, the synthesized layout using optimized \glspl{alu} represents a $3.4\times$ area increase; the gap would further widen if the entire \gls{pe} was synthesized.
 
 Several factors contribute to this discrepancy. Whereas the manual estimation used hand-designed components with relatively high logic gate density~\cite{ng2023blueprint}, the \emph{Bestagon} gate library used in synthesis deliberately chooses a larger footprint to ensure sufficient separation between logic canvases of neighboring tiles to minimize inter-gate interference~\cite{walter2022hexagons}. In addition, while the manual estimation directly used optimal \gls{alu} layouts, this work can only influence \gls{alu} selection at the \gls{rtl}-to-netlist stage. The resulting \gls{aig} blurs the boundaries of arithmetic elements, limiting subsequent possibilities of exploiting those structures. Finally, the large W8A8 \gls{aig} is computationally intractable for \gls{gold} to place and route, preventing the $\approx \SIrange{40}{50}{\percent}$ area reductions observed for smaller configurations from being realized at this bit-width. Nevertheless, the successful end-to-end design flow achieved in this work demonstrates what state-of-the-art \gls{fcn} \gls{eda} tools can realize on the \gls{sidb} platform, combining manufacturable layouts with full testbench-based verification and highlighting opportunities for further optimization.
 
@@ -614,11 +614,11 @@ Several factors contribute to this discrepancy. Whereas the manual estimation us
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion and Future Work}\label{sec:conclusion-future-work}
 
-This work has demonstrated an end-to-end \gls{rtl}-to-atoms synthesis flow for a quantized \gls{sidb}-based \gls{mxu} \gls{pe} with fully verifiable behavior across abstraction levels, enabled by a hierarchical \gls{rtl} organization that separates a combinational \gls{pe}-core from its clocked shell. By explicitly selecting \gls{sidb}-appropriate \glspl{alu} in \emph{Yosys} and tailoring technology mapping, placement-and-routing, and hexagonalization to \gls{sidb} logic, the presented framework achieves $\approx\!\SI{15}{\percent}$ reduction in synthesized \gls{pe}-core area over prior flows and realizes additional footprint savings of $\approx\!\SIrange{40}{50}{\percent}$ for configurations within the scaling range of newer placement-and-routing algorithms, while making explicit the trade-off between footprint and device-level robustness under \gls{fom}-aware mapping. Together, these components establish a reproducible benchmark for atomic-scale \gls{eda} that links \gls{rtl} design decisions, \gls{eda} tooling, and manufacturable \gls{sidb} layouts.
+This work has demonstrated an end-to-end \gls{rtl}-to-atoms synthesis flow for a quantized \gls{sidb}-based \gls{mxu} \gls{pe} with fully verifiable behavior across abstraction levels, enabled by a hierarchical \gls{rtl} organization that separates a combinational \gls{pe}-core from its clocked shell. By explicitly selecting \gls{sidb}-appropriate \glspl{alu} in \emph{Yosys} and tailoring technology mapping, placement-and-routing, and hexagonalization to \gls{sidb} logic, the presented framework achieves a $\approx\!\SI{15}{\percent}$ reduction in synthesized \gls{pe}-core area over prior flows and realizes additional footprint savings of $\approx\!\SIrange{40}{50}{\percent}$ for configurations within the scaling range of newer placement-and-routing algorithms, while making explicit the trade-off between footprint and device-level robustness under \gls{fom}-aware mapping. Together, these components establish a reproducible benchmark for atomic-scale \gls{eda} that links \gls{rtl} design decisions, \gls{eda} tooling, and manufacturable \gls{sidb} layouts.
 
 The findings also reveal several avenues for future work to bridge remaining gaps with manual expert designs.
 Preservation of frequently used arithmetic structures across the synthesis stages will allow optimized \gls{alu} layouts to be directly applied in the physical layout stage.
-On physical design, improving the scalability and robustness of \gls{gold} and \gls{plo} to handle larger scale netlists could allow the demonstrated footprint advantages to carry over to W8A8-scale layouts and larger accelerators.
+For physical design, improving the scalability and robustness of \gls{gold} and \gls{plo} to handle larger scale netlists could allow the demonstrated footprint advantages to carry over to W8A8-scale layouts and larger accelerators.
 Finally, automating full \gls{pe}- and \gls{mxu}-level synthesis---including routing of the return path and of the \gls{pe}-core's pins to the outer \gls{pe} module---will enable application-scale studies that jointly consider device reliability, clocking constraints, and workload characteristics. Taken together, the successful demonstration of an end-to-end \gls{rtl}-to-atoms flow for a quantized \gls{sidb}-based \gls{mxu} \gls{pe} provides a concrete methodological foundation for these avenues and serves as the blueprint for future scalable accelerator studies on \glspl{sidb}.
 
 \section*{Content Generated by AI}
