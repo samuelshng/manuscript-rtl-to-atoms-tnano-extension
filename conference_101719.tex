@@ -39,8 +39,8 @@
 % \setlist[description]{leftmargin=\parindent,labelindent=\parindent}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-\usepackage[textsize=tiny]{todonotes}
-% \usepackage[textsize=tiny,disable]{todonotes}
+% \usepackage[textsize=tiny]{todonotes}
+\usepackage[textsize=tiny,disable]{todonotes}
 % Maximize margin width to still barely see the sides of todonotes
 \setlength{\marginparwidth}{1.3cm}
 
@@ -252,7 +252,7 @@
 As \gls{cmos} scaling slows and \gls{ai} demand soars, atomic-scale platforms such as quantum-dot logic based on \glspl{sidb} offer a promising path toward energy-efficient computation, yet practical design flows from \gls{rtl} specifications to manufacturable layouts remain limited.
 This work presents an \gls{rtl}-to-atoms synthesis framework for a quantized \glsentrylong{mxu} targeting \gls{sidb}-based \gls{fcn}.
 Building on recent advances in \gls{sidb}-aware \gls{eda}, the framework combines a hierarchical, parameterized \gls{rtl} architecture with platform-optimized \glsentrylongpl{alu}, reducing the synthesized logic core of processing elements by about $\bm{15\,\%}$ compared to prior flows.
-Key improvements were also made to the synthesis workflow to better optimize for \gls{sidb}-logic and incorporate figure-of-merit awareness, which together ensure that the synthesized layouts achieve favorable area scaling and throughput while balancing operational robustness.
+Key improvements were also made to the synthesis workflow to better optimize for \gls{sidb} logic and incorporate figure-of-merit awareness, which together ensure that the synthesized layouts achieve favorable area scaling and throughput while balancing operational robustness.
 Evaluations across multiple bit-widths show substantial footprint reductions for configurations within the tractable range of latest placement-and-routing algorithms while preserving testbench-validated correctness from \gls{rtl} to dot-accurate \gls{sidb} layouts, thereby establishing a reproducible benchmark for \gls{eda} on atomic-scale computing.
 This represents a significant milestone, bridging manually-intensive workflows with scalable, automated methodologies, providing a valuable foundation for future design efforts for \gls{sidb}-based accelerators.
 %
