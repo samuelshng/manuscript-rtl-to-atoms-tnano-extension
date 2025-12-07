@@ -194,7 +194,7 @@ def transform_author_value_if_needed(author_value: str) -> Optional[str]:
         return None
 
     authors = split_authors_top_level(author_value)
-    if len(authors) <= 6:
+    if len(authors) <= 3:
         return None
 
     first_author = authors[0].strip()
